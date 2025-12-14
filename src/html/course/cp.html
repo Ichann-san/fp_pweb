@@ -114,10 +114,12 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../../js/script.js"></script>
+    <script src="../../js/auth.js"></script>
     <script src="../../js/course.js"></script>
     <script>
         // Initialize course with CP chapters
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            await AuthModule.init(); // Initialize auth first
             CourseModule.init('cp', [
                 { id: 'intro', title: 'Introduction to CP', contentFile: 'intro.md' },
                 { id: 'complexity', title: 'Time Complexity', contentFile: 'complexity.md' },

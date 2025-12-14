@@ -6,24 +6,20 @@ const AuthModule = (function() {
     // ============================================
     // State
     // ============================================
+    // Determine API base path based on current location
+    const API_BASE = window.location.pathname.includes('/course/') ? '../../../api' : '../../api';
+
     let authData = {
         users: [],
         currentUser: null
     };
 
     // ============================================
-    // Storage Management
+    // Initialization
     // ============================================
-    function init() {
-        const storedUsers = localStorage.getItem('ichanhub_users');
-        if (storedUsers) authData.users = JSON.parse(storedUsers);
-        
-        const currentUser = localStorage.getItem('ichanhub_current_user');
-        if (currentUser) authData.currentUser = JSON.parse(currentUser);
-    }
-
-    function saveUsers() {
-        localStorage.setItem('ichanhub_users', JSON.stringify(authData.users));
+    async function init() {
+        await checkSession();
+        updateUI();
     }
 
     // ============================================
@@ -40,61 +36,153 @@ const AuthModule = (function() {
     // ============================================
     // Auth Operations
     // ============================================
-    function register(email, password) {
-        return new Promise((resolve, reject) => {
-            if (!validateEmail(email)) {
-                return reject({ success: false, message: 'Invalid email format' });
-            }
+    async function register(email, password) {
+        if (!validateEmail(email)) {
+            throw new Error('Invalid email format');
+        }
 
-            if (!validatePassword(password)) {
-                return reject({ success: false, message: 'Password must be at least 6 characters' });
-            }
+        if (!validatePassword(password)) {
+            throw new Error('Password must be at least 6 characters');
+        }
 
-            if (authData.users.find(user => user.email === email)) {
-                return reject({ success: false, message: 'Email already registered' });
-            }
-
-            const newUser = {
-                id: Date.now(),
-                email,
-                password, // In production, hash this!
-                createdAt: new Date().toISOString()
-            };
-
-            authData.users.push(newUser);
-            saveUsers();
-
-            resolve({ 
-                success: true, 
-                message: 'Registration successful!',
-                user: { id: newUser.id, email: newUser.email }
+        try {
+            const response = await fetch(`${API_BASE}/auth/register.php`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email, password })
             });
-        });
-    }
 
-    function login(email, password) {
-        return new Promise((resolve, reject) => {
-            const user = authData.users.find(u => u.email === email && u.password === password);
+            const data = await response.json();
             
-            if (!user) {
-                return reject({ success: false, message: 'Invalid email or password' });
+            if (!response.ok) {
+                throw new Error(data.message || 'Registration failed');
             }
 
-            authData.currentUser = { id: user.id, email: user.email };
-            localStorage.setItem('ichanhub_current_user', JSON.stringify(authData.currentUser));
-
-            resolve({ 
-                success: true, 
-                message: 'Login successful!',
-                user: authData.currentUser
-            });
-        });
+            return data;
+        } catch (error) {
+            throw error;
+        }
     }
 
-    function logout() {
-        authData.currentUser = null;
-        localStorage.removeItem('ichanhub_current_user');
-        return { success: true, message: 'Logged out successfully' };
+    async function login(email, password) {
+        try {
+            const response = await fetch(`${API_BASE}/auth/login.php`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Login failed');
+            }
+
+            authData.currentUser = data.user;
+            return data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async function logout() {
+        try {
+            const response = await fetch(`${API_BASE}/auth/logout.php`, { method: 'POST' });
+            const data = await response.json();
+            authData.currentUser = null;
+            updateUI(); // Update UI after logout
+            return data;
+        } catch (error) {
+            console.error('Logout failed:', error);
+        }
+    }
+
+    async function checkSession() {
+        try {
+            const response = await fetch(`${API_BASE}/auth/check_session.php`);
+            const data = await response.json();
+            
+            if (data.is_logged_in) {
+                authData.currentUser = data.user;
+            } else {
+                authData.currentUser = null;
+            }
+            return authData.currentUser;
+        } catch (e) {
+            console.error('Session check failed', e);
+            authData.currentUser = null;
+            return null;
+        }
+    }
+    
+    function updateUI() {
+        // Update nav links based on auth state
+        const desktopNav = document.getElementById('desktop-nav-links');
+        const mobileNav = document.getElementById('mobile-nav-links');
+        // Select login button by finding the one that points to login.html, handling relative paths
+        const loginBtn = Array.from(document.querySelectorAll('.btn-primary-custom')).find(el =>
+            el.getAttribute('href') && el.getAttribute('href').endsWith('login.html')
+        );
+        
+        // Common links
+        const links = [
+            { text: 'Home', href: 'index.html' },
+            { text: 'Courses', href: 'index.html#course-section' }
+        ];
+
+        if (authData.currentUser) {
+            links.push({ text: 'My Dashboard', href: 'index.html#dashboard' });
+        }
+
+        const linksHtml = links.map(link =>
+            `<a href="${link.href}" class="nav-link-custom">${link.text}</a>`
+        ).join('');
+
+        if (desktopNav) {
+            desktopNav.innerHTML = linksHtml;
+            // Add logout button to desktop
+            if (authData.currentUser) {
+                desktopNav.innerHTML += `
+                    <div class="dropdown">
+                        <button class="btn btn-link nav-link-custom dropdown-toggle text-decoration-none" type="button" data-bs-toggle="dropdown">
+                            ${authData.currentUser.username || authData.currentUser.email}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><button class="dropdown-item" onclick="AuthModule.logout().then(() => window.location.href = 'login.html')">Logout</button></li>
+                        </ul>
+                    </div>
+                `;
+            }
+        }
+
+        if (mobileNav) {
+            mobileNav.innerHTML = linksHtml;
+            if (authData.currentUser) {
+                mobileNav.innerHTML += `
+                    <div class="border-top pt-3 mt-3">
+                        <div class="px-3 mb-2 fw-bold">${authData.currentUser.username || authData.currentUser.email}</div>
+                        <button class="btn btn-outline-danger w-100" onclick="AuthModule.logout().then(() => window.location.href = 'login.html')">Logout</button>
+                    </div>
+                `;
+            } else {
+                mobileNav.innerHTML += `
+                    <a href="login.html" class="btn-primary-custom text-center mt-3">Login</a>
+                `;
+            }
+        }
+
+        // Hide/Show Login Button in Header
+        if (loginBtn) {
+            if (authData.currentUser) {
+                loginBtn.classList.add('d-none');
+            } else {
+                loginBtn.classList.remove('d-none');
+            }
+        }
     }
 
     // ============================================
@@ -110,16 +198,17 @@ const AuthModule = (function() {
     });
 
     // Initialize
-    init();
+    // init(); // Call manually or on DOMContentLoaded to ensure elements exist
 
     // Public API
     return {
+        init,
         register,
         login,
         logout,
+        checkSession,
         getCurrentUser,
-        isLoggedIn,
-        getAuthDataForBackend
+        isLoggedIn
     };
 })();
 
@@ -127,6 +216,9 @@ const AuthModule = (function() {
 // Login Page DOM Handlers
 // ============================================
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize Auth
+    AuthModule.init();
+
     const loginTab = document.getElementById('login-tab');
     const registerTab = document.getElementById('register-tab');
     const loginForm = document.getElementById('login-form');
@@ -177,8 +269,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const email = document.getElementById('login-email').value;
         const password = document.getElementById('login-password').value;
 
-        console.log('Login data ready for backend:', AuthModule.getAuthDataForBackend('login', email, password));
-
         try {
             const result = await AuthModule.login(email, password);
             showMessage(result.message, true);
@@ -198,8 +288,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (password !== confirmPassword) {
             return showMessage('Passwords do not match', false);
         }
-
-        console.log('Register data ready for backend:', AuthModule.getAuthDataForBackend('register', email, password));
 
         try {
             const result = await AuthModule.register(email, password);
