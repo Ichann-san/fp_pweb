@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { name: 'Courses', href: '#course-section' },
         { name: 'Dashboard', href: '#' },
         { name: 'Forum', href: '#' },
-        { name: 'Login', href: 'login.html' }
+        // { name: 'Login', href: 'login.html' }
     ];
 
     const courses = [
