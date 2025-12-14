@@ -15,15 +15,15 @@ const AuthModule = (function() {
     // Storage Management
     // ============================================
     function init() {
-        const storedUsers = localStorage.getItem('ichanhub_users');
+        const storedUsers = localStorage.getItem('learning_hub_users');
         if (storedUsers) authData.users = JSON.parse(storedUsers);
         
-        const currentUser = localStorage.getItem('ichanhub_current_user');
+        const currentUser = localStorage.getItem('learning_hub_current_user');
         if (currentUser) authData.currentUser = JSON.parse(currentUser);
     }
 
     function saveUsers() {
-        localStorage.setItem('ichanhub_users', JSON.stringify(authData.users));
+        localStorage.setItem('learning_hub_users', JSON.stringify(authData.users));
     }
 
     // ============================================
@@ -81,7 +81,7 @@ const AuthModule = (function() {
             }
 
             authData.currentUser = { id: user.id, email: user.email };
-            localStorage.setItem('ichanhub_current_user', JSON.stringify(authData.currentUser));
+            localStorage.setItem('learning_hub_current_user', JSON.stringify(authData.currentUser));
 
             resolve({ 
                 success: true, 
@@ -93,7 +93,7 @@ const AuthModule = (function() {
 
     function logout() {
         authData.currentUser = null;
-        localStorage.removeItem('ichanhub_current_user');
+        localStorage.removeItem('learning_hub_current_user');
         return { success: true, message: 'Logged out successfully' };
     }
 

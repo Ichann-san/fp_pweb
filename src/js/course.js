@@ -32,12 +32,12 @@ const CourseModule = (function() {
     // Progress Management
     // ============================================
     function loadProgress() {
-        const stored = localStorage.getItem(`ichanhub_progress_${courseId}`);
+        const stored = localStorage.getItem(`learning_hub_progress_${courseId}`);
         progress = stored ? JSON.parse(stored) : {};
     }
 
     function saveProgress() {
-        localStorage.setItem(`ichanhub_progress_${courseId}`, JSON.stringify(progress));
+        localStorage.setItem(`learning_hub_progress_${courseId}`, JSON.stringify(progress));
     }
 
     function markComplete(chapterId) {
