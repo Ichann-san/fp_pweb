@@ -123,20 +123,27 @@ const AuthModule = (function() {
         // Update nav links based on auth state
         const desktopNav = document.getElementById('desktop-nav-links');
         const mobileNav = document.getElementById('mobile-nav-links');
-        // Select login button by finding the one that points to login.html, handling relative paths
-        const loginBtn = Array.from(document.querySelectorAll('.btn-primary-custom')).find(el =>
-            el.getAttribute('href') && el.getAttribute('href').endsWith('login.html')
-        );
         
+        // Auth action container in header (replaces login button)
+        const authActionContainer = document.getElementById('auth-action-container');
+        const loginBtn = document.getElementById('login-btn-header');
+        
+        // Determine path to login.html relative to current page
+        // If we are in /course/ (deep), we need ../login.html
+        // If we are in root /html/, we need login.html
+        const isInCourseDir = window.location.pathname.includes('/course/');
+        const loginPath = isInCourseDir ? '../login.html' : 'login.html';
+        const homePath = isInCourseDir ? '../index.html' : 'index.html';
+        const coursePath = isInCourseDir ? '../index.html#course-section' : 'index.html#course-section';
+
         // Common links
         const links = [
-            { text: 'Home', href: 'index.html' },
-            { text: 'Courses', href: 'index.html#course-section' }
+            { text: 'Home', href: homePath },
+            { text: 'Courses', href: coursePath }
         ];
-
-        if (authData.currentUser) {
-            links.push({ text: 'My Dashboard', href: 'index.html#dashboard' });
-        }
+        
+        // "My Dashboard" link removed from main navigation as requested
+        // Users can access their courses through the username dropdown
 
         const linksHtml = links.map(link =>
             `<a href="${link.href}" class="nav-link-custom">${link.text}</a>`
@@ -144,18 +151,32 @@ const AuthModule = (function() {
 
         if (desktopNav) {
             desktopNav.innerHTML = linksHtml;
-            // Add logout button to desktop
+            // We no longer inject the user dropdown HERE. We inject it into authActionContainer instead.
+        }
+        
+        // Update Header Login/User Section
+        if (authActionContainer) {
             if (authData.currentUser) {
-                desktopNav.innerHTML += `
+                // User is logged in: Show Username Dropdown
+                authActionContainer.innerHTML = `
                     <div class="dropdown">
-                        <button class="btn btn-link nav-link-custom dropdown-toggle text-decoration-none" type="button" data-bs-toggle="dropdown">
+                        <button class="btn btn-link nav-link-custom dropdown-toggle text-decoration-none border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                             ${authData.currentUser.username || authData.currentUser.email}
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><button class="dropdown-item" onclick="AuthModule.logout().then(() => window.location.href = 'login.html')">Logout</button></li>
+                             <li><a class="dropdown-item" href="${coursePath}">My Courses</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><button class="dropdown-item text-danger" onclick="AuthModule.logout().then(() => window.location.href = '${loginPath}')">Logout</button></li>
                         </ul>
                     </div>
                 `;
+                authActionContainer.classList.remove('d-none');
+            } else {
+                // User is logged out: Show Login Button
+                authActionContainer.innerHTML = `
+                    <a href="${loginPath}" id="login-btn-header" class="btn-primary-custom">Login</a>
+                `;
+                 authActionContainer.classList.remove('d-none');
             }
         }
 
@@ -165,22 +186,13 @@ const AuthModule = (function() {
                 mobileNav.innerHTML += `
                     <div class="border-top pt-3 mt-3">
                         <div class="px-3 mb-2 fw-bold">${authData.currentUser.username || authData.currentUser.email}</div>
-                        <button class="btn btn-outline-danger w-100" onclick="AuthModule.logout().then(() => window.location.href = 'login.html')">Logout</button>
+                        <button class="btn btn-outline-danger w-100" onclick="AuthModule.logout().then(() => window.location.href = '${loginPath}')">Logout</button>
                     </div>
                 `;
             } else {
                 mobileNav.innerHTML += `
-                    <a href="login.html" class="btn-primary-custom text-center mt-3">Login</a>
+                    <a href="${loginPath}" class="btn-primary-custom text-center mt-3">Login</a>
                 `;
-            }
-        }
-
-        // Hide/Show Login Button in Header
-        if (loginBtn) {
-            if (authData.currentUser) {
-                loginBtn.classList.add('d-none');
-            } else {
-                loginBtn.classList.remove('d-none');
             }
         }
     }

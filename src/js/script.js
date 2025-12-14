@@ -96,13 +96,13 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderNavLinks() {
         if (!desktopNavContainer || !mobileNavContainer) return;
 
-        desktopNavContainer.innerHTML = navLinks.map(link => 
+        desktopNavContainer.innerHTML = navLinks.map(link =>
             `<a href="${getNavHref(link.href)}" class="nav-link-custom">${link.name}</a>`
         ).join('');
 
-        mobileNavContainer.innerHTML = navLinks.map(link => 
+        mobileNavContainer.innerHTML = navLinks.map(link =>
             `<a href="${getNavHref(link.href)}" class="mobile-nav-link">${link.name}</a>`
-        ).join('') + `<a href="login.html" class="btn-primary-custom text-center mt-4">Login</a>`;
+        ).join('');
     }
 
     function renderCourseCards() {

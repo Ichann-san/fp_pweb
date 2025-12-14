@@ -287,6 +287,7 @@ a:hover {
 .course-carousel-wrapper {
   position: relative;
   overflow: hidden;
+  padding: 0 2rem;
 }
 
 .course-carousel {
@@ -296,6 +297,7 @@ a:hover {
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
   padding: 1rem 0.5rem;
+  justify-content: center;
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
@@ -307,11 +309,42 @@ a:hover {
 .course-carousel .card-custom {
   flex: 0 0 280px;
   scroll-snap-align: start;
+  max-width: 280px;
+}
+
+@media (min-width: 576px) {
+  .course-carousel-wrapper {
+    padding: 0 3rem;
+  }
 }
 
 @media (min-width: 768px) {
   .course-carousel .card-custom {
     flex: 0 0 320px;
+    max-width: 320px;
+  }
+  
+  .course-carousel-wrapper {
+    padding: 0 4rem;
+  }
+}
+
+@media (min-width: 1200px) {
+  .course-carousel {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .course-carousel .card-custom {
+    flex: 0 0 calc(33.333% - 1rem);
+    max-width: calc(33.333% - 1rem);
+  }
+}
+
+@media (min-width: 1400px) {
+  .course-carousel .card-custom {
+    flex: 0 0 calc(25% - 1.125rem);
+    max-width: calc(25% - 1.125rem);
   }
 }
 
