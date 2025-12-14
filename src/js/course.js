@@ -106,7 +106,7 @@ const CourseModule = (function() {
                 // Since there isn't a clear 'get_progress' API, we'll maintain local state for UI but send updates to backend.
                 
                 // Fallback to local storage for immediate UI, but ideally backend should provide this.
-                 const stored = localStorage.getItem(`ichanhub_progress_${courseId}`);
+                 const stored = localStorage.getItem(`learninghub_progress_${courseId}`);
                  console.log('[Debug] Loaded progress from local storage:', stored);
                  progress = stored ? JSON.parse(stored) : {};
             }
@@ -160,7 +160,7 @@ const CourseModule = (function() {
             console.log('[Debug] markComplete response status:', response.status);
             if (response.ok || response.status === 200) {
                 progress[chapterId] = true;
-                localStorage.setItem(`ichanhub_progress_${courseId}`, JSON.stringify(progress));
+                localStorage.setItem(`learninghub_progress_${courseId}`, JSON.stringify(progress));
                 renderChaptersList();
                 updateProgressBar();
             }
@@ -173,7 +173,7 @@ const CourseModule = (function() {
         // Since the backend doesn't support un-completing, we will just update local state
         // In a real app, we would need a DELETE endpoint
         delete progress[chapterId];
-        localStorage.setItem(`ichanhub_progress_${courseId}`, JSON.stringify(progress));
+        localStorage.setItem(`learninghub_progress_${courseId}`, JSON.stringify(progress));
         renderChaptersList();
         updateProgressBar();
     }

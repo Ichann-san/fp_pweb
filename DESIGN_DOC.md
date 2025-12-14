@@ -1,7 +1,7 @@
-# IchanHub - System Design Document
+# Learning Hub - System Design Document
 
 ## 1. Application Concept
-**Name:** IchanHub (Web Programming Course Platform)
+**Name:** Learning Hub (Web Programming Course Platform)
 
 **Description:**
 A web-based platform offering curated courses on web development. It features user authentication, a dashboard, course progress tracking, and dynamic content delivery.

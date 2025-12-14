@@ -1,13 +1,13 @@
-# Script Video Demo - IchanHub
+# Script Video Demo - Learning Hub
 
 **Durasi Estimasi:** 3-5 Menit
 
 ---
 
 ## 1. Opening (0:00 - 0:30)
-**Visual:** Tampilan Halaman Utama IchanHub (Home Page).
+**Visual:** Tampilan Halaman Utama Learning Hub (Home Page).
 **Audio (Speaker):**
-"Halo semuanya, selamat datang di video demo proyek akhir Pemrograman Web kami. Kami dari kelompok [Nama Kelompok] akan mempresentasikan aplikasi **IchanHub**, sebuah platform pembelajaran web programming interaktif."
+"Halo semuanya, selamat datang di video demo proyek akhir Pemrograman Web kami. Kami dari kelompok [Nama Kelompok] akan mempresentasikan aplikasi **Learning Hub**, sebuah platform pembelajaran web programming interaktif."
 
 "Sebelum masuk ke demo, perkenalkan anggota tim kami:
 1. [Nama Anggota 1] sebagai Backend Developer yang menangani database dan API.
@@ -21,7 +21,7 @@
 
 **Step 1: Registrasi & Login**
 *   **Action:** Klik tombol Login -> Pilih Tab Register.
-*   **Input:** Masukkan email `demo@ichanhub.com` dan password. Klik Register.
+*   **Input:** Masukkan email `demo@learninghub.com` dan password. Klik Register.
 *   **Action:** Masukkan data yang sama di form Login. Klik Login.
 *   **Narasi:** "Pertama, pengguna baru dapat mendaftar akun. Sistem validasi akan memastikan email valid. Setelah registrasi berhasil, kita login untuk masuk ke sistem. Perhatikan menu 'My Dashboard' yang muncul setelah login berhasil."
 

@@ -1,4 +1,7 @@
--- Database: IchanHub
+-- Database: Learning Hub
+
+CREATE DATABASE IF NOT EXISTS learning_hub;
+USE learning_hub;
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -26,8 +29,8 @@ CREATE TABLE `users` (
 --
 -- Password is 'password123' ($2y$10$...)
 INSERT INTO `users` (`id`, `username`, `email`, `password`, `created_at`) VALUES
-(1, 'ichan_admin', 'admin@ichanhub.com', '$2y$12$E6LmO7LHv.SKk6gV3zqanuzp.W2BipGdsiP/qv246R2hoPi8lw37a', NOW()),
-(2, 'student_one', 'student@ichanhub.com', '$2y$12$E6LmO7LHv.SKk6gV3zqanuzp.W2BipGdsiP/qv246R2hoPi8lw37a', NOW());
+(1, 'learninghub_admin', 'admin@learninghub.com', '$2y$12$E6LmO7LHv.SKk6gV3zqanuzp.W2BipGdsiP/qv246R2hoPi8lw37a', NOW()),
+(2, 'student_one', 'student@learninghub.com', '$2y$12$E6LmO7LHv.SKk6gV3zqanuzp.W2BipGdsiP/qv246R2hoPi8lw37a', NOW());
 
 -- --------------------------------------------------------
 

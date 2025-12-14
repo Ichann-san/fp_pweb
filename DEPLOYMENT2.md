@@ -36,16 +36,16 @@ sudo mysql -u root
 
 Jalankan perintah SQL berikut di dalam console MariaDB untuk membuat database dan user:
 ```sql
-CREATE DATABASE ichanhub_local;
-CREATE USER 'ichan_user'@'localhost' IDENTIFIED BY 'password123';
-GRANT ALL PRIVILEGES ON ichanhub_local.* TO 'ichan_user'@'localhost';
+CREATE DATABASE learning_hub;
+CREATE USER 'learninghub_user'@'localhost' IDENTIFIED BY 'password123';
+GRANT ALL PRIVILEGES ON learning_hub.* TO 'learninghub_user'@'localhost';
 FLUSH PRIVILEGES;
 EXIT;
 ```
 
 Import struktur dan data awal dari file `database.sql` ke dalam database yang baru dibuat:
 ```bash
-mysql -u root ichanhub_local < database.sql
+mysql -u root learning_hub < database.sql
 ```
 
 ## 3. Konfigurasi Aplikasi
@@ -55,8 +55,8 @@ Edit file `config/database.php` dan pastikan isinya cocok:
 
 ```php
 $host = "localhost";
-$db_name = "ichanhub_local";
-$username = "ichan_user";
+$db_name = "learning_hub";
+$username = "learninghub_user";
 $password = "password123";
 ```
 
@@ -74,5 +74,5 @@ Buka browser favorit Anda dan akses URL berikut:
 http://localhost:8000/src/html/index.html
 
 **Kredensial Login (Demo):**
-*   **Email:** `student@ichanhub.com`
+*   **Email:** `student@learninghub.com`
 *   **Password:** `password123`

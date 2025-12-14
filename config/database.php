@@ -1,8 +1,8 @@
 <?php
 class Database {
     private $host = "localhost";
-    private $db_name = "ichanhub_local";
-    private $username = "ichan_user";
+    private $db_name = "learning_hub";
+    private $username = "learninghub_user";
     private $password = "password123";
     public $conn;
 

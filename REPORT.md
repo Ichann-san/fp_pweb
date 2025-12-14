@@ -1,7 +1,7 @@
-# Laporan Proyek Akhir Pemrograman Web - IchanHub
+# Laporan Proyek Akhir Pemrograman Web - Learning Hub
 
 ## 1. Penjelasan Teknis
-Aplikasi **IchanHub** dibangun menggunakan pendekatan **Native PHP** untuk Backend dan **HTML/CSS/JS** murni untuk Frontend. Sistem ini menggunakan arsitektur **RESTful API** sederhana di mana frontend berkomunikasi dengan backend melalui HTTP Request (Fetch API) dan menerima respon dalam format JSON.
+Aplikasi **Learning Hub** dibangun menggunakan pendekatan **Native PHP** untuk Backend dan **HTML/CSS/JS** murni untuk Frontend. Sistem ini menggunakan arsitektur **RESTful API** sederhana di mana frontend berkomunikasi dengan backend melalui HTTP Request (Fetch API) dan menerima respon dalam format JSON.
 
 ### Interaksi PHP dengan Database
 Koneksi ke database ditangani oleh kelas `Database` yang terletak di `config/database.php`. Kami menggunakan **PDO (PHP Data Objects)** karena:
