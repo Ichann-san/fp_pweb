@@ -1,9 +1,3 @@
-/**
- * Authentication Module
- * Handles login and registration functionality
- * Data is stored and can be fetched for backend integration
- */
-
 const AuthModule = (function() {
     // Store for authentication data (can be sent to backend later)
     let authData = {

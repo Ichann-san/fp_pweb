@@ -67,6 +67,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const darkIcon = document.getElementById('theme-toggle-dark-icon');
     const lightIcon = document.getElementById('theme-toggle-light-icon');
 
+    // Check if we're on index.html
+    const isOnIndexPage = window.location.pathname.endsWith('index.html') || 
+                          window.location.pathname.endsWith('/') ||
+                          window.location.pathname.endsWith('/html/');
+
+    // Helper function to get the correct href for navigation
+    function getNavHref(href) {
+        // If it's a hash link and we're not on index.html, prepend index.html
+        if (href.startsWith('#') && !isOnIndexPage) {
+            return 'index.html' + href;
+        }
+        return href;
+    }
+
     function renderNavLinks() {
         if (!desktopNavContainer || !mobileNavContainer) return;
 
@@ -74,8 +88,9 @@ document.addEventListener('DOMContentLoaded', () => {
         mobileNavContainer.innerHTML = '';
 
         navLinks.forEach(link => {
-            desktopNavContainer.innerHTML += `<a href="${link.href}" class="text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">${link.name}</a>`;
-            mobileNavContainer.innerHTML += `<a href="${link.href}" class="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400">${link.name}</a>`;
+            const href = getNavHref(link.href);
+            desktopNavContainer.innerHTML += `<a href="${href}" class="text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">${link.name}</a>`;
+            mobileNavContainer.innerHTML += `<a href="${href}" class="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400">${link.name}</a>`;
         });
         mobileNavContainer.innerHTML += `<a href="login.html" class="w-full mt-6 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 text-center block">Login</a>`;
     }
