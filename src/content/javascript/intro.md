@@ -17,7 +17,7 @@ JavaScript is a **programming language** that enables you to:
 console.log("Hello, World!");
 
 // Create a variable
-let name = "IchanHub";
+let name = "Learning Hub";
 
 // Display an alert
 alert("Welcome to " + name + "!");
