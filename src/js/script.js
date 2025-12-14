@@ -4,7 +4,8 @@ document.addEventListener('DOMContentLoaded', () => {
         { name: 'Home', href: '#home-section' },
         { name: 'Courses', href: '#course-section' },
         { name: 'Dashboard', href: '#' },
-        { name: 'Forum', href: '#' }
+        { name: 'Forum', href: '#' },
+        { name: 'Login', href: 'login.html' }
     ];
 
     const courses = [
@@ -76,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
             desktopNavContainer.innerHTML += `<a href="${link.href}" class="text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">${link.name}</a>`;
             mobileNavContainer.innerHTML += `<a href="${link.href}" class="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400">${link.name}</a>`;
         });
-        mobileNavContainer.innerHTML += `<button class="w-full mt-6 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">Login</button>`;
+        mobileNavContainer.innerHTML += `<a href="login.html" class="w-full mt-6 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 text-center block">Login</a>`;
     }
 
     function renderCourseCards() {
