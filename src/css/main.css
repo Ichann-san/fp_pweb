@@ -1,0 +1,735 @@
+/* ============================================
+   IchanHub - Main Stylesheet
+   Bootstrap 5.3 + Custom Theme
+   ============================================ */
+
+/* --------------------------------------------
+   1. CSS Custom Properties (Theme Variables)
+   -------------------------------------------- */
+:root {
+  /* Primary Colors (Indigo) */
+  --bs-primary: #4f46e5;
+  --bs-primary-rgb: 79, 70, 229;
+  --bs-primary-hover: #4338ca;
+  --bs-primary-light: #818cf8;
+  
+  /* Gray Scale */
+  --bs-gray-50: #f9fafb;
+  --bs-gray-100: #f3f4f6;
+  --bs-gray-200: #e5e7eb;
+  --bs-gray-300: #d1d5db;
+  --bs-gray-400: #9ca3af;
+  --bs-gray-500: #6b7280;
+  --bs-gray-600: #4b5563;
+  --bs-gray-700: #374151;
+  --bs-gray-800: #1f2937;
+  --bs-gray-900: #111827;
+  
+  /* Semantic Colors */
+  --bs-success: #10b981;
+  --bs-danger: #ef4444;
+  --bs-warning: #f59e0b;
+  
+  /* Component Variables */
+  --header-bg: #ffffff;
+  --body-bg: var(--bs-gray-50);
+  --card-bg: #ffffff;
+  --text-primary: var(--bs-gray-800);
+  --text-secondary: var(--bs-gray-600);
+  --text-muted: var(--bs-gray-400);
+  --border-color: var(--bs-gray-200);
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-normal: 300ms ease;
+}
+
+/* Dark Mode Variables */
+[data-bs-theme="dark"] {
+  --header-bg: var(--bs-gray-800);
+  --body-bg: var(--bs-gray-900);
+  --card-bg: var(--bs-gray-800);
+  --text-primary: var(--bs-gray-200);
+  --text-secondary: var(--bs-gray-400);
+  --text-muted: var(--bs-gray-500);
+  --border-color: var(--bs-gray-700);
+}
+
+/* --------------------------------------------
+   2. Base & Reset
+   -------------------------------------------- */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--body-bg);
+  color: var(--text-primary);
+  transition: background-color var(--transition-normal), color var(--transition-normal);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+a {
+  color: var(--bs-primary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--bs-primary-hover);
+}
+
+/* --------------------------------------------
+   3. Layout Components
+   -------------------------------------------- */
+
+/* Header */
+.site-header {
+  background-color: var(--header-bg);
+  box-shadow: var(--shadow-sm);
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+  transition: background-color var(--transition-normal);
+}
+
+.site-header .navbar {
+  padding: 1rem 0;
+}
+
+/* Logo */
+.brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--bs-primary) !important;
+  text-decoration: none;
+}
+
+.brand-logo img {
+  height: 2rem;
+  width: 2rem;
+}
+
+[data-bs-theme="dark"] .brand-logo {
+  color: var(--bs-primary-light) !important;
+}
+
+/* Navigation Links */
+.nav-link-custom {
+  color: var(--text-secondary) !important;
+  font-weight: 500;
+  padding: 0.5rem 0;
+  transition: color var(--transition-fast);
+}
+
+.nav-link-custom:hover {
+  color: var(--bs-primary) !important;
+}
+
+/* Theme Toggle Button */
+.btn-theme-toggle {
+  background: transparent;
+  border: none;
+  padding: 0.5rem;
+  border-radius: 50%;
+  color: var(--text-secondary);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.btn-theme-toggle:hover {
+  background-color: var(--bs-gray-100);
+  color: var(--text-primary);
+}
+
+[data-bs-theme="dark"] .btn-theme-toggle:hover {
+  background-color: var(--bs-gray-700);
+}
+
+/* Cards */
+.card-custom {
+  background-color: var(--card-bg);
+  border: none;
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow-lg);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), background-color var(--transition-normal);
+}
+
+.card-custom:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+.card-custom .card-img-top {
+  height: 200px;
+  object-fit: cover;
+  border-radius: 0.75rem 0.75rem 0 0;
+}
+
+.card-custom .card-body {
+  padding: 1.5rem;
+}
+
+.card-custom .card-title {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.card-custom .card-text {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+/* Static Card (no hover animation) */
+.card-static {
+  background-color: var(--card-bg);
+  border: none;
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow-lg);
+  transition: background-color var(--transition-normal);
+}
+
+/* --------------------------------------------
+   4. Buttons
+   -------------------------------------------- */
+.btn-primary-custom {
+  background-color: var(--bs-primary);
+  border: none;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: background-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.btn-primary-custom:hover {
+  background-color: var(--bs-primary-hover);
+  transform: scale(1.05);
+  color: white;
+}
+
+.btn-outline-custom {
+  background-color: transparent;
+  border: 2px solid var(--bs-primary);
+  color: var(--bs-primary);
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+}
+
+.btn-outline-custom:hover {
+  background-color: var(--bs-primary);
+  color: white;
+}
+
+/* --------------------------------------------
+   5. Mobile Menu
+   -------------------------------------------- */
+.mobile-menu-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1040;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--transition-normal), visibility var(--transition-normal);
+}
+
+.mobile-menu-overlay.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.mobile-menu {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 16rem;
+  background-color: var(--card-bg);
+  box-shadow: var(--shadow-lg);
+  z-index: 1050;
+  padding: 1.5rem;
+  transform: translateX(100%);
+  transition: transform var(--transition-normal);
+}
+
+.mobile-menu.show {
+  transform: translateX(0);
+}
+
+.mobile-nav-link {
+  display: block;
+  padding: 0.75rem 0;
+  color: var(--text-secondary);
+  font-size: 1.125rem;
+  font-weight: 500;
+  transition: color var(--transition-fast);
+}
+
+.mobile-nav-link:hover {
+  color: var(--bs-primary);
+}
+
+/* --------------------------------------------
+   6. Carousel / Slider
+   -------------------------------------------- */
+.course-carousel-wrapper {
+  position: relative;
+  overflow: hidden;
+}
+
+.course-carousel {
+  display: flex;
+  gap: 1.5rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  padding: 1rem 0.5rem;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.course-carousel::-webkit-scrollbar {
+  display: none;
+}
+
+.course-carousel .card-custom {
+  flex: 0 0 280px;
+  scroll-snap-align: start;
+}
+
+@media (min-width: 768px) {
+  .course-carousel .card-custom {
+    flex: 0 0 320px;
+  }
+}
+
+.carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: var(--card-bg);
+  border: none;
+  border-radius: 50%;
+  width: 3rem;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-lg);
+  color: var(--text-primary);
+  z-index: 10;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.carousel-btn:hover {
+  background-color: var(--bs-primary);
+  color: white;
+}
+
+.carousel-btn.prev {
+  left: 0.5rem;
+}
+
+.carousel-btn.next {
+  right: 0.5rem;
+}
+
+/* --------------------------------------------
+   7. Hero Section
+   -------------------------------------------- */
+.hero-section {
+  padding: 4rem 0;
+  text-align: center;
+}
+
+.hero-section h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 768px) {
+  .hero-section h1 {
+    font-size: 3.75rem;
+  }
+}
+
+.hero-section .lead {
+  color: var(--text-secondary);
+  font-size: 1.125rem;
+  max-width: 42rem;
+  margin: 0 auto;
+}
+
+.text-gradient {
+  background: linear-gradient(to right, var(--bs-primary), #8b5cf6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* --------------------------------------------
+   8. Footer
+   -------------------------------------------- */
+.site-footer {
+  background-color: var(--bs-gray-800);
+  border-top: 1px solid var(--bs-gray-700);
+  color: white;
+  margin-top: auto;
+  padding: 2rem 0;
+}
+
+[data-bs-theme="dark"] .site-footer {
+  background-color: var(--bs-gray-900);
+}
+
+.site-footer p {
+  margin-bottom: 0.5rem;
+}
+
+.site-footer .text-muted {
+  color: var(--bs-gray-400) !important;
+}
+
+/* --------------------------------------------
+   9. Auth Forms (Login/Register)
+   -------------------------------------------- */
+.auth-container {
+  max-width: 28rem;
+  margin: 0 auto;
+}
+
+.auth-card {
+  background-color: var(--card-bg);
+  border-radius: 1rem;
+  box-shadow: var(--shadow-lg);
+  padding: 2rem;
+  transition: background-color var(--transition-normal);
+}
+
+.auth-tabs {
+  display: flex;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  text-align: center;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.auth-tab:hover {
+  color: var(--bs-primary);
+}
+
+.auth-tab.active {
+  color: var(--bs-primary);
+  border-bottom-color: var(--bs-primary);
+}
+
+.form-control-custom {
+  background-color: var(--bs-gray-50);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  color: var(--text-primary);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background-color var(--transition-normal);
+}
+
+.form-control-custom:focus {
+  border-color: var(--bs-primary);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+  outline: none;
+}
+
+[data-bs-theme="dark"] .form-control-custom {
+  background-color: var(--bs-gray-700);
+  border-color: var(--bs-gray-600);
+}
+
+.form-label-custom {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+/* Auth Message */
+.auth-message {
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+.auth-message.success {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: var(--bs-success);
+  border: 1px solid var(--bs-success);
+}
+
+.auth-message.error {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--bs-danger);
+  border: 1px solid var(--bs-danger);
+}
+
+/* --------------------------------------------
+   10. Section Styling
+   -------------------------------------------- */
+.section-title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+/* --------------------------------------------
+   11. Utility Classes
+   -------------------------------------------- */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Text utilities */
+.text-primary-custom {
+  color: var(--bs-primary) !important;
+}
+
+.text-gray-400 {
+  color: var(--bs-gray-400) !important;
+}
+
+.text-gray-500 {
+  color: var(--bs-gray-500) !important;
+}
+
+.text-gray-600 {
+  color: var(--bs-gray-600) !important;
+}
+
+/* Background utilities */
+.bg-primary-custom {
+  background-color: var(--bs-primary) !important;
+}
+
+/* Rounded utilities */
+.rounded-xl {
+  border-radius: 0.75rem !important;
+}
+
+.rounded-2xl {
+  border-radius: 1rem !important;
+}
+
+/* Shadow utilities */
+.shadow-custom {
+  box-shadow: var(--shadow) !important;
+}
+
+.shadow-lg-custom {
+  box-shadow: var(--shadow-lg) !important;
+}
+
+/* Gap utilities (Bootstrap 5 already has these, but adding for clarity) */
+.gap-6 {
+  gap: 1.5rem !important;
+}
+
+.gap-8 {
+  gap: 2rem !important;
+}
+
+/* Spacing utilities */
+.px-6 {
+  padding-left: 1.5rem !important;
+  padding-right: 1.5rem !important;
+}
+
+.py-8 {
+  padding-top: 2rem !important;
+  padding-bottom: 2rem !important;
+}
+
+/* --------------------------------------------
+   12. Responsive Adjustments
+   -------------------------------------------- */
+@media (max-width: 767.98px) {
+  .hero-section {
+    padding: 2rem 0;
+  }
+  
+  .hero-section h1 {
+    font-size: 2rem;
+  }
+  
+  .section-title {
+    font-size: 1.5rem;
+  }
+}
+
+/* --------------------------------------------
+   13. Badge Links (Course Cards)
+   -------------------------------------------- */
+.badge-link {
+  display: inline-block;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  transition: all var(--transition-fast);
+  text-decoration: none;
+}
+
+.badge-violet {
+  background-color: #ede9fe;
+  color: #6d28d9;
+}
+.badge-violet:hover {
+  background-color: #ddd6fe;
+  color: #5b21b6;
+}
+
+.badge-yellow {
+  background-color: #fef9c3;
+  color: #a16207;
+}
+.badge-yellow:hover {
+  background-color: #fef08a;
+  color: #854d0e;
+}
+
+.badge-green {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+.badge-green:hover {
+  background-color: #bbf7d0;
+  color: #166534;
+}
+
+.badge-indigo {
+  background-color: #e0e7ff;
+  color: #4338ca;
+}
+.badge-indigo:hover {
+  background-color: #c7d2fe;
+  color: #3730a3;
+}
+
+.badge-pink {
+  background-color: #fce7f3;
+  color: #be185d;
+}
+.badge-pink:hover {
+  background-color: #fbcfe8;
+  color: #9d174d;
+}
+
+.badge-orange {
+  background-color: #ffedd5;
+  color: #c2410c;
+}
+.badge-orange:hover {
+  background-color: #fed7aa;
+  color: #9a3412;
+}
+
+.badge-sky {
+  background-color: #e0f2fe;
+  color: #0369a1;
+}
+.badge-sky:hover {
+  background-color: #bae6fd;
+  color: #075985;
+}
+
+/* Dark mode badge adjustments */
+[data-bs-theme="dark"] .badge-violet {
+  background-color: rgba(139, 92, 246, 0.2);
+  color: #a78bfa;
+}
+[data-bs-theme="dark"] .badge-yellow {
+  background-color: rgba(250, 204, 21, 0.2);
+  color: #fcd34d;
+}
+[data-bs-theme="dark"] .badge-green {
+  background-color: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+}
+[data-bs-theme="dark"] .badge-indigo {
+  background-color: rgba(99, 102, 241, 0.2);
+  color: #818cf8;
+}
+[data-bs-theme="dark"] .badge-pink {
+  background-color: rgba(236, 72, 153, 0.2);
+  color: #f472b6;
+}
+[data-bs-theme="dark"] .badge-orange {
+  background-color: rgba(249, 115, 22, 0.2);
+  color: #fb923c;
+}
+[data-bs-theme="dark"] .badge-sky {
+  background-color: rgba(14, 165, 233, 0.2);
+  color: #38bdf8;
+}
+
+/* --------------------------------------------
+   14. Min Height Utilities
+   -------------------------------------------- */
+.min-vh-50 {
+  min-height: 50vh;
+}
+
+/* --------------------------------------------
+   15. Complete Button
+   -------------------------------------------- */
+.btn-complete {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: var(--bs-success);
+  border: 1px solid var(--bs-success);
+  font-weight: 500;
+  transition: all var(--transition-fast);
+}
+
+.btn-complete:hover {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: var(--bs-success);
+}
+
+[data-bs-theme="dark"] .btn-complete {
+  background-color: rgba(16, 185, 129, 0.2);
+}
+
+[data-bs-theme="dark"] .bg-light {
+  background-color: var(--bs-gray-700) !important;
+}
