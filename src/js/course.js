@@ -1,413 +1,244 @@
-/**
- * Course Module
- * Handles course content loading, progress tracking, and chapter navigation
- */
-
-const CourseModule = (function() {
-    // ============================================
-    // State
-    // ============================================
-    // Determine API base path based on current location
-    const API_BASE = window.location.pathname.includes('/course/') ? '../../../api' : '../../api';
-
-    let courseId = ''; // This will store the numeric ID
-    let courseSlug = ''; // This will store the slug string
+/** Course content, chapter navigation, and persisted progress. */
+const CourseModule = (() => {
+    let courseSlug = '';
     let chapters = [];
     let progress = {};
     let currentChapter = null;
-    let enrolledCourses = [];
 
-    // ============================================
-    // Initialization
-    // ============================================
-    async function init(slug, chapterList) {
-        console.log('[Debug] CourseModule.init called', { slug, chaptersCount: chapterList?.length });
-        courseSlug = slug;
-        chapters = chapterList;
-        
-        // Render chapters immediately so sidebar isn't empty while waiting for API
-        renderChaptersList();
-        
-        // Load first chapter immediately (will update with progress later)
-        if (chapters.length > 0) {
-            loadChapter(chapters[0]?.id);
-        }
+    const escapeHTML = value => String(value).replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
 
-        // Fetch course numeric ID from slug
-        try {
-            const response = await fetch(`${API_BASE}/courses/read.php`);
-            
-            if (response.ok) {
-                const data = await response.json();
-                const course = data.records?.find(c => c.slug === slug);
-                if (course) {
-                    courseId = course.id;
-                    console.log('[Debug] courseId resolved:', courseId);
-                } else {
-                    console.error('Course not found for slug:', slug);
+    function inlineMarkdown(value) {
+        return escapeHTML(value)
+            .replace(/`([^`]+)`/g, '<code>$1</code>')
+            .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+            .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" rel="noopener noreferrer">$1</a>');
+    }
+
+    function parseMarkdown(markdown) {
+        const lines = markdown.replace(/\r\n?/g, '\n').split('\n');
+        const output = [];
+        let paragraph = [];
+        let listType = null;
+        let code = [];
+        let inCode = false;
+
+        const flushParagraph = () => {
+            if (paragraph.length) output.push(`<p>${inlineMarkdown(paragraph.join(' '))}</p>`);
+            paragraph = [];
+        };
+        const closeList = () => {
+            if (listType) output.push(`</${listType}>`);
+            listType = null;
+        };
+
+        for (const line of lines) {
+            if (line.startsWith('```')) {
+                flushParagraph(); closeList();
+                if (inCode) {
+                    output.push(`<pre><code>${escapeHTML(code.join('\n'))}</code></pre>`);
+                    code = [];
                 }
+                inCode = !inCode;
+                continue;
             }
-        } catch (error) {
-            console.error('Failed to resolve course ID:', error);
+            if (inCode) { code.push(line); continue; }
+            if (!line.trim()) { flushParagraph(); closeList(); continue; }
+
+            const heading = line.match(/^(#{1,3})\s+(.+)$/);
+            if (heading) {
+                flushParagraph(); closeList();
+                const level = heading[1].length;
+                output.push(`<h${level}>${inlineMarkdown(heading[2])}</h${level}>`);
+                continue;
+            }
+
+            const unordered = line.match(/^\s*[-*]\s+(.+)$/);
+            const ordered = line.match(/^\s*\d+\.\s+(.+)$/);
+            if (unordered || ordered) {
+                flushParagraph();
+                const nextType = unordered ? 'ul' : 'ol';
+                if (listType !== nextType) { closeList(); output.push(`<${nextType}>`); listType = nextType; }
+                output.push(`<li>${inlineMarkdown((unordered || ordered)[1])}</li>`);
+                continue;
+            }
+
+            if (line.startsWith('> ')) {
+                flushParagraph(); closeList();
+                output.push(`<blockquote>${inlineMarkdown(line.slice(2))}</blockquote>`);
+                continue;
+            }
+            paragraph.push(line.trim());
         }
-        
-        await loadProgress(); // Load from backend
-        
-        // Re-render to show progress ticks
+
+        flushParagraph(); closeList();
+        if (code.length) output.push(`<pre><code>${escapeHTML(code.join('\n'))}</code></pre>`);
+        return output.join('');
+    }
+
+    async function fetchJSON(path, options) {
+        const response = await fetch(path, { credentials: 'same-origin', ...options });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || 'Request failed.');
+        return data;
+    }
+
+    function showStatus(message, type = 'info') {
+        let status = document.getElementById('course-status');
+        if (!status) {
+            status = document.createElement('p');
+            status.id = 'course-status';
+            document.getElementById('chapters-list')?.before(status);
+        }
+        status.className = `alert py-2 small ${type === 'error' ? 'alert-danger' : type === 'success' ? 'alert-success' : 'alert-info'}`;
+        status.textContent = message;
+        status.setAttribute('role', type === 'error' ? 'alert' : 'status');
+    }
+
+    async function init(slug, chapterList) {
+        courseSlug = slug;
+        chapters = Array.isArray(chapterList) ? chapterList : [];
         renderChaptersList();
         updateProgressBar();
 
-        // If we have progress, potentially jump to first incomplete?
-        // Or maybe just let the user stay on the first one loaded.
-        // The original code tried to load first incomplete.
-        const firstIncomplete = chapters.find(ch => !progress[ch.id]);
-        if (firstIncomplete && firstIncomplete.id !== chapters[0].id) {
-             // Only switch if different from what we already loaded, or maybe just leave it to user
-             // But original requirement was to load first incomplete.
-             loadChapter(firstIncomplete.id);
-        }
+        await AuthModule.init();
+        if (AuthModule.isLoggedIn()) await loadProgress();
+        else showStatus('Log in to save chapter progress.');
+
+        const firstChapter = chapters.find(chapter => !progress[chapter.id]) || chapters[0];
+        if (firstChapter) await loadChapter(firstChapter.id);
     }
 
-    // ============================================
-    // Progress & Enrollment Management
-    // ============================================
     async function loadProgress() {
-        console.log('[Debug] loadProgress called');
-        
-        if (typeof AuthModule === 'undefined') {
-            console.error('[Debug] AuthModule is undefined! Is auth.js included?');
-            return;
-        }
-
-        // Only load progress if user is logged in
-        const loggedIn = AuthModule.isLoggedIn();
-        console.log('[Debug] isLoggedIn:', loggedIn);
-        
-        if (!loggedIn) {
-             progress = {};
-             return;
-        }
-
         try {
-            // Fetch enrolled courses to check status and progress
-            const response = await fetch(`${API_BASE}/enroll/my_courses.php`);
-            if (response.ok) {
-                const data = await response.json();
-                enrolledCourses = data.records || [];
-                
-                // For now, we don't have a specific endpoint for chapter-level progress in the provided API
-                // So we might need to rely on local storage or implement a fetch if update.php returns state
-                // However, the task requires calling update.php.
-                // Let's assume for this task we just sync local 'progress' state with successful calls to update.php
-                // But ideally, we should fetch progress from DB.
-                // Given the API visible: `api/progress/update.php`
-                
-                // Let's check if we can get chapter progress.
-                // Since there isn't a clear 'get_progress' API, we'll maintain local state for UI but send updates to backend.
-                
-                // Fallback to local storage for immediate UI, but ideally backend should provide this.
-                 const stored = localStorage.getItem(`learninghub_progress_${courseId}`);
-                 console.log('[Debug] Loaded progress from local storage:', stored);
-                 progress = stored ? JSON.parse(stored) : {};
-            }
+            const data = await fetchJSON(`/api/progress/read.php?course_slug=${encodeURIComponent(courseSlug)}`);
+            progress = Object.fromEntries((data.completed || []).map(chapterId => [chapterId, true]));
+            renderChaptersList();
+            updateProgressBar();
+            showStatus('Progress is synced to your account.', 'success');
         } catch (error) {
-            console.error('Failed to load progress', error);
+            showStatus(error.message, 'error');
         }
     }
 
-    async function enroll(courseIdToEnroll) {
+    async function setComplete(chapterId, completed) {
         if (!AuthModule.isLoggedIn()) {
-            window.location.href = 'login.html';
+            const returnPath = encodeURIComponent(window.location.pathname);
+            window.location.assign(`/src/html/login.html?return=${returnPath}`);
             return;
         }
 
-        try {
-            const response = await fetch(`${API_BASE}/enroll/create.php`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ course_id: courseIdToEnroll })
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                alert('Enrolled successfully!');
-                window.location.reload();
-            } else {
-                alert(data.message || 'Enrollment failed');
-            }
-        } catch (error) {
-            console.error('Enrollment error:', error);
-            alert('An error occurred during enrollment');
-        }
-    }
-
-    async function markComplete(chapterId) {
-        if (!AuthModule.isLoggedIn()) return;
-        console.log('[Debug] markComplete called for', chapterId);
-
-        try {
-            const response = await fetch(`${API_BASE}/progress/update.php`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    course_id: courseId,
-                    chapter_id: chapterId,
-                    status: 'completed'
-                })
-            });
-
-            console.log('[Debug] markComplete response status:', response.status);
-            if (response.ok || response.status === 200) {
-                progress[chapterId] = true;
-                localStorage.setItem(`learninghub_progress_${courseId}`, JSON.stringify(progress));
-                renderChaptersList();
-                updateProgressBar();
-            }
-        } catch (error) {
-            console.error('Failed to update progress', error);
-        }
-    }
-
-    async function markIncomplete(chapterId) {
-        // Since the backend doesn't support un-completing, we will just update local state
-        // In a real app, we would need a DELETE endpoint
-        delete progress[chapterId];
-        localStorage.setItem(`learninghub_progress_${courseId}`, JSON.stringify(progress));
+        const previous = !!progress[chapterId];
+        if (completed) progress[chapterId] = true;
+        else delete progress[chapterId];
         renderChaptersList();
         updateProgressBar();
+
+        try {
+            await fetchJSON('/api/progress/update.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ course_slug: courseSlug, chapter_id: chapterId, completed })
+            });
+            showStatus(completed ? 'Chapter marked complete.' : 'Chapter marked incomplete.', 'success');
+            if (currentChapter === chapterId) await loadChapter(chapterId, false);
+        } catch (error) {
+            if (previous) progress[chapterId] = true;
+            else delete progress[chapterId];
+            renderChaptersList();
+            updateProgressBar();
+            showStatus(error.message, 'error');
+        }
     }
 
     function toggleComplete(chapterId) {
-        progress[chapterId] ? markIncomplete(chapterId) : markComplete(chapterId);
+        return setComplete(chapterId, !progress[chapterId]);
     }
 
-    function isComplete(chapterId) {
-        return !!progress[chapterId];
-    }
-
-    // ============================================
-    // UI Updates
-    // ============================================
     function updateProgressBar() {
-        const completed = Object.keys(progress).filter(key => progress[key]).length;
-        const percentage = chapters.length > 0 ? Math.round((completed / chapters.length) * 100) : 0;
-        console.log('[Debug] updateProgressBar', { completed, total: chapters.length, percentage, progressObj: progress });
-
-        const progressPercentage = document.getElementById('progress-percentage');
-        const progressBarFill = document.getElementById('progress-bar-fill');
-
-        if (progressPercentage) progressPercentage.textContent = `${percentage}%`;
-        if (progressBarFill) progressBarFill.style.width = `${percentage}%`;
+        const completed = chapters.filter(chapter => progress[chapter.id]).length;
+        const percentage = chapters.length ? Math.round((completed / chapters.length) * 100) : 0;
+        const label = document.getElementById('progress-percentage');
+        const bar = document.getElementById('progress-bar-fill');
+        if (label) label.textContent = `${percentage}%`;
+        if (bar) {
+            bar.style.width = `${percentage}%`;
+            bar.setAttribute('aria-valuenow', String(percentage));
+            bar.setAttribute('aria-label', `${percentage}% complete`);
+        }
     }
 
     function renderChaptersList() {
         const container = document.getElementById('chapters-list');
         if (!container) return;
-
-        container.innerHTML = chapters.map((chapter) => {
-            const isCompleted = isComplete(chapter.id);
-            const isActive = currentChapter === chapter.id;
-
-            return `
-                <div class="chapter-item ${isCompleted ? 'completed' : ''}" data-chapter-id="${chapter.id}">
-                    <div class="chapter-checkbox-container">
-                        <input 
-                            type="checkbox" 
-                            class="chapter-checkbox" 
-                            id="checkbox-${chapter.id}"
-                            ${isCompleted ? 'checked' : ''}
-                            onchange="CourseModule.toggleComplete('${chapter.id}')"
-                        >
-                    </div>
-                    <div 
-                        class="chapter-title ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}"
-                        onclick="CourseModule.loadChapter('${chapter.id}')"
-                    >
-                        ${chapter.title}
-                    </div>
-                </div>
-            `;
+        container.innerHTML = chapters.map(chapter => {
+            const completed = !!progress[chapter.id];
+            const active = currentChapter === chapter.id;
+            return `<div class="chapter-item ${completed ? 'completed' : ''}">
+                <div class="chapter-checkbox-container"><input type="checkbox" class="chapter-checkbox" id="checkbox-${chapter.id}" ${completed ? 'checked' : ''} aria-label="Mark ${chapter.title} complete"></div>
+                <div role="button" tabindex="0" class="chapter-title ${active ? 'active' : ''} ${completed ? 'completed' : ''}" data-chapter="${chapter.id}" ${active ? 'aria-current="true"' : ''}>${chapter.title}</div>
+            </div>`;
         }).join('');
+        container.querySelectorAll('.chapter-checkbox').forEach((checkbox, index) => checkbox.addEventListener('change', () => setComplete(chapters[index].id, checkbox.checked)));
+        container.querySelectorAll('[data-chapter]').forEach(button => button.addEventListener('click', () => loadChapter(button.dataset.chapter)));
+        container.querySelectorAll('[data-chapter]').forEach(item => item.addEventListener('keydown', event => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                loadChapter(item.dataset.chapter);
+            }
+        }));
     }
 
-    // ============================================
-    // Content Loading
-    // ============================================
-    async function loadChapter(chapterId) {
-        if (!chapterId) return;
-        
-        const chapter = chapters.find(ch => ch.id === chapterId);
-        if (!chapter) return;
+    async function loadChapter(chapterId, scroll = true) {
+        const chapter = chapters.find(item => item.id === chapterId);
+        const content = document.getElementById('content-area');
+        if (!chapter || !content) return;
 
         currentChapter = chapterId;
         renderChaptersList();
-
-        const contentArea = document.getElementById('content-area');
-        if (!contentArea) return;
-
-        // Show loading state
-        contentArea.innerHTML = `
-            <div class="d-flex justify-content-center align-items-center py-5">
-                <div class="loading-spinner"></div>
-            </div>
-        `;
+        content.setAttribute('aria-busy', 'true');
+        content.innerHTML = '<div class="d-flex justify-content-center align-items-center py-5" role="status" aria-label="Loading chapter"><div class="loading-spinner"></div></div>';
 
         try {
-            // Use courseSlug for file path since content is organized by slug folders
-            const response = await fetch(`../../content/${courseSlug}/${chapter.contentFile}`);
-            
-            if (response.ok) {
-                const markdown = await response.text();
-                contentArea.innerHTML = typeof marked !== 'undefined' 
-                    ? marked.parse(markdown) 
-                    : `<pre>${markdown}</pre>`;
-            } else {
-                contentArea.innerHTML = renderPlaceholder(chapter);
-            }
+            const response = await fetch(`../../content/${encodeURIComponent(courseSlug)}/${encodeURIComponent(chapter.contentFile)}`);
+            if (!response.ok) throw new Error('Chapter content is not available yet.');
+            const markdown = await response.text();
+            const body = parseMarkdown(markdown);
+            content.innerHTML = `${body}${renderNavigationButtons(chapterId)}`;
+            bindContentButtons(content);
         } catch (error) {
-            contentArea.innerHTML = renderPlaceholder(chapter);
+            content.innerHTML = `<div class="alert alert-danger" role="alert"><h2 class="h4">${chapter.title}</h2><p class="mb-0">${error.message}</p></div>${renderNavigationButtons(chapterId)}`;
+            bindContentButtons(content);
+        } finally {
+            content.removeAttribute('aria-busy');
         }
-
-        // Add navigation buttons
-        contentArea.innerHTML += renderNavigationButtons(chapterId);
-    }
-
-    function renderPlaceholder(chapter) {
-        return `
-            <div class="text-center py-5">
-                <h2 class="h3 fw-bold mb-3">${chapter.title}</h2>
-                <p class="text-gray-500 mb-4">Content for this chapter is coming soon!</p>
-                <p class="small text-gray-400">
-                    Create a file at: <code class="bg-light rounded px-2 py-1">src/content/${courseSlug}/${chapter.contentFile}</code>
-                </p>
-            </div>
-        `;
+        if (scroll) document.getElementById('course-content')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     function renderNavigationButtons(chapterId) {
-        const currentIndex = chapters.findIndex(ch => ch.id === chapterId);
-        const isFirst = currentIndex === 0;
-        const isLast = currentIndex === chapters.length - 1;
-        const completed = isComplete(chapterId);
-
-        return `
-            <div class="mt-5 pt-4 border-top d-flex justify-content-between align-items-center">
-                <button 
-                    onclick="CourseModule.navigatePrevious()"
-                    class="btn btn-link text-gray-600 ${isFirst ? 'invisible' : ''}"
-                >
-                    ← Previous
-                </button>
-                <button 
-                    onclick="CourseModule.toggleComplete('${chapterId}')"
-                    class="btn ${completed ? 'btn-complete' : 'btn-primary-custom'} px-4"
-                >
-                    ${completed ? '✓ Completed' : 'Mark as Complete'}
-                </button>
-                <button 
-                    onclick="CourseModule.navigateNext()"
-                    class="btn btn-link text-gray-600 ${isLast ? 'invisible' : ''}"
-                >
-                    Next →
-                </button>
-            </div>
-        `;
+        const index = chapters.findIndex(chapter => chapter.id === chapterId);
+        return `<nav class="mt-5 pt-4 border-top d-flex justify-content-between align-items-center" aria-label="Chapter navigation">
+            <button type="button" class="btn btn-link text-gray-600 ${index === 0 ? 'invisible' : ''}" data-previous ${index === 0 ? 'disabled' : ''}>← Previous</button>
+            <button type="button" class="btn ${progress[chapterId] ? 'btn-complete' : 'btn-primary-custom'} px-4" data-toggle-current>${progress[chapterId] ? '✓ Completed' : 'Mark as Complete'}</button>
+            <button type="button" class="btn btn-link text-gray-600 ${index === chapters.length - 1 ? 'invisible' : ''}" data-next ${index === chapters.length - 1 ? 'disabled' : ''}>Next →</button>
+        </nav>`;
     }
 
-    // ============================================
-    // Navigation
-    // ============================================
+    function bindContentButtons(content) {
+        content.querySelector('[data-previous]')?.addEventListener('click', navigatePrevious);
+        content.querySelector('[data-next]')?.addEventListener('click', navigateNext);
+        content.querySelector('[data-toggle-current]')?.addEventListener('click', () => toggleComplete(currentChapter));
+    }
+
     function navigatePrevious() {
-        const currentIndex = chapters.findIndex(ch => ch.id === currentChapter);
-        if (currentIndex > 0) {
-            loadChapter(chapters[currentIndex - 1].id);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+        const index = chapters.findIndex(chapter => chapter.id === currentChapter);
+        if (index > 0) loadChapter(chapters[index - 1].id);
     }
 
     function navigateNext() {
-        const currentIndex = chapters.findIndex(ch => ch.id === currentChapter);
-        if (currentIndex < chapters.length - 1) {
-            loadChapter(chapters[currentIndex + 1].id);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+        const index = chapters.findIndex(chapter => chapter.id === currentChapter);
+        if (index < chapters.length - 1) loadChapter(chapters[index + 1].id);
     }
 
-    // ============================================
-    // Dashboard & Course Listing
-    // ============================================
-    async function loadDashboard() {
-        const carousel = document.getElementById('course-carousel');
-        if (!carousel) return;
-
-        try {
-            // Fetch all courses
-            const coursesResponse = await fetch(`${API_BASE}/courses/read.php`);
-            const coursesData = await coursesResponse.json();
-            const allCourses = coursesData.records || [];
-
-            // Fetch user enrollments if logged in
-            let userEnrollments = [];
-            if (AuthModule.isLoggedIn()) {
-                const enrollResponse = await fetch(`${API_BASE}/enroll/my_courses.php`);
-                const enrollData = await enrollResponse.json();
-                userEnrollments = enrollData.records || [];
-            }
-
-            // Render
-            carousel.innerHTML = allCourses.map(course => {
-                const isEnrolled = userEnrollments.some(e => e.id === course.id);
-                return renderCourseCard(course, isEnrolled);
-            }).join('');
-
-        } catch (error) {
-            console.error('Failed to load dashboard', error);
-            carousel.innerHTML = '<p class="text-center w-100">Failed to load courses.</p>';
-        }
-    }
-
-    function renderCourseCard(course, isEnrolled) {
-        return `
-            <div class="course-card">
-                <div class="course-badge ${course.badge_class || 'badge-beginner'}">
-                    ${course.badge_class ? course.badge_class.replace('badge-', '').toUpperCase() : 'BEGINNER'}
-                </div>
-                <img src="${course.image_url || '../../assets/icon.svg'}" alt="${course.title}" class="course-icon mb-4">
-                <h3 class="course-title h5 mb-2">${course.title}</h3>
-                <p class="course-description small text-muted mb-4">
-                    ${course.description || 'Learn the basics and master the skills.'}
-                </p>
-                
-                ${isEnrolled
-                    ? `<a href="course/${course.slug}.html" class="btn btn-primary-custom w-100">Continue Learning</a>`
-                    : `<button onclick="CourseModule.enroll(${course.id})" class="btn btn-outline-primary w-100">Enroll Now</button>`
-                }
-            </div>
-        `;
-    }
-
-    // ============================================
-    // Public API
-    // ============================================
-    return {
-        init,
-        loadChapter,
-        toggleComplete,
-        markComplete,
-        markIncomplete,
-        isComplete,
-        navigatePrevious,
-        navigateNext,
-        loadDashboard,
-        enroll
-    };
+    return { init, loadChapter, toggleComplete, navigatePrevious, navigateNext };
 })();
-
-// Auto-load dashboard if on home page
-document.addEventListener('DOMContentLoaded', () => {
-    if (document.getElementById('home-section')) {
-        // Wait for auth to initialize first
-        setTimeout(() => CourseModule.loadDashboard(), 500);
-    }
-});

@@ -1,11 +1,14 @@
 <?php
-header("Content-Type: application/json; charset=UTF-8");
-header("Access-Control-Allow-Methods: POST");
-header("Access-Control-Allow-Origin: *");
+declare(strict_types=1);
 
-session_start();
+require_once __DIR__ . '/../../config/app.php';
+
+learning_hub_require_method('POST');
+learning_hub_start_session();
+$_SESSION = [];
+if (ini_get('session.use_cookies')) {
+    $params = session_get_cookie_params();
+    setcookie(session_name(), '', time() - 42000, $params['path'], $params['domain'], $params['secure'], $params['httponly']);
+}
 session_destroy();
-
-http_response_code(200);
-echo json_encode(array("message" => "Logout successful."));
-?>
+learning_hub_json(['message' => 'Logout successful.']);

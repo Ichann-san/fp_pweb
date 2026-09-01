@@ -1,71 +1,33 @@
-# Script Video Demo - Learning Hub
+# Learning Hub Demo Script
 
-**Durasi Estimasi:** 3-5 Menit
+Estimated duration: 3–4 minutes.
 
----
+## 1. Introduction
 
-## 1. Opening (0:00 - 0:30)
-**Visual:** Tampilan Halaman Utama Learning Hub (Home Page).
-**Audio (Speaker):**
-"Halo semuanya, selamat datang di video demo proyek akhir Pemrograman Web kami. Kami dari kelompok [Nama Kelompok] akan mempresentasikan aplikasi **Learning Hub**, sebuah platform pembelajaran web programming interaktif."
+Show the home page and explain that Learning Hub uses raw HTML, CSS, and JavaScript with a native PHP backend. Point out the responsive navigation, theme toggle, and course catalog.
 
-"Sebelum masuk ke demo, perkenalkan anggota tim kami:
-1. [Nama Anggota 1] sebagai Backend Developer yang menangani database dan API.
-2. [Nama Anggota 2] sebagai Frontend Developer yang mengintegrasikan logika JavaScript.
-3. [Nama Anggota 3] sebagai UI/UX Designer yang membuat tampilan antarmuka responsif."
+## 2. Account flow
 
----
+1. Open **Login**, switch to **Register**, and enter a username, unique email, and an eight-character password.
+2. Register, then sign in with the same credentials.
+3. Explain that PHP hashes the password, creates the session, and records both successful and failed login attempts in server-side JSON storage.
 
-## 2. End-to-End Demo (0:30 - 2:00)
-**Scenario:** User baru mendaftar, mengambil kursus, dan menyelesaikan materi.
+## 3. Learning flow
 
-**Step 1: Registrasi & Login**
-*   **Action:** Klik tombol Login -> Pilih Tab Register.
-*   **Input:** Masukkan email `demo@learninghub.com` dan password. Klik Register.
-*   **Action:** Masukkan data yang sama di form Login. Klik Login.
-*   **Narasi:** "Pertama, pengguna baru dapat mendaftar akun. Sistem validasi akan memastikan email valid. Setelah registrasi berhasil, kita login untuk masuk ke sistem. Perhatikan menu 'My Dashboard' yang muncul setelah login berhasil."
+1. Return home and enroll in a course.
+2. Open its course page and select different chapters.
+3. Mark a chapter complete; show the progress bar changing.
+4. Refresh the page and show that the server returns the saved progress.
+5. Unmark the chapter to demonstrate the two-way update.
 
-**Step 2: Enroll Kursus**
-*   **Action:** Scroll ke bagian "Available Courses". Pilih "HTML Front end".
-*   **Action:** Klik kartu kursus tersebut.
-*   **Narasi:** "Di halaman utama, tersedia berbagai pilihan kursus. Saat kita memilih salah satu kursus, sistem akan otomatis mendaftarkan (enroll) user ke kursus tersebut."
+## 4. Code walkthrough
 
-**Step 3: Tracking Progress**
-*   **Action:** Di halaman detail kursus, baca sekilas materi.
-*   **Action:** Klik tombol "Mark Chapter as Complete" di bagian bawah.
-*   **Visual:** Alert sukses muncul atau tombol berubah status.
-*   **Narasi:** "Pengguna dapat membaca materi dan menandai progress mereka. Data ini disimpan real-time ke database."
+- `config/app.php`: JSON repository, catalog, sessions, and API helpers
+- `api/auth/login.php`: credential verification and login event recording
+- `src/js/auth.js`: browser-to-PHP authentication requests
+- `src/js/course.js`: Markdown rendering and progress synchronization
+- `graphify-out/graph.html`: interactive project architecture graph
 
-**Step 4: Dashboard Check**
-*   **Action:** Klik menu "My Dashboard".
-*   **Visual:** Tunjukkan progress bar kursus HTML yang sudah terisi sebagian.
-*   **Narasi:** "Kita bisa memantau kemajuan belajar di halaman Dashboard. Di sini terlihat kursus HTML progress-nya sudah bertambah."
+## 5. Deployment note and closing
 
-**Step 5: Logout**
-*   **Action:** Klik nama user di pojok kanan atas -> Logout.
-*   **Narasi:** "Terakhir, fitur logout untuk mengakhiri sesi pengguna dengan aman."
-
----
-
-## 3. Code Walkthrough (2:00 - 3:30)
-**Visual:** Buka VS Code / Text Editor.
-
-**Part A: Backend (Database & API)**
-*   **File:** `config/database.php`
-*   **Narasi:** "Untuk backend, kami menggunakan Native PHP. Ini adalah file koneksi database menggunakan PDO untuk keamanan."
-*   **File:** `api/auth/login.php`
-*   **Narasi:** "Contoh endpoint login ini menerima input JSON, memverifikasi hash password, dan memulai session PHP."
-
-**Part B: Frontend (Integration)**
-*   **File:** `src/js/auth.js`
-*   **Narasi:** "Di sisi client, kami menggunakan Fetch API. File `auth.js` ini menangani pengiriman data ke backend secara asynchronous tanpa reload halaman."
-
----
-
-## 4. Deployment Proof (3:30 - 4:00)
-**Visual:** Browser address bar menunjukkan URL domain hosting (bukan localhost).
-**Action:** Refresh halaman untuk membuktikan live site.
-**Narasi:** "Aplikasi ini sudah kami deploy di hosting [Sebutkan Hosting, misal: 000webhost/Niagahoster]. Semua fitur berjalan lancar di lingkungan produksi."
-
-**Closing:**
-"Sekian demo dari kelompok kami. Terima kasih."
+If demonstrating Vercel, state clearly that its `/tmp` JSON storage and PHP sessions are temporary. For stable accounts and progress, run the same code on writable PHP hosting or later replace the JSON repository with a managed database.

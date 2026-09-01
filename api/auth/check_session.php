@@ -1,24 +1,8 @@
 <?php
-header("Content-Type: application/json; charset=UTF-8");
-header("Access-Control-Allow-Methods: GET");
-header("Access-Control-Allow-Origin: *");
+declare(strict_types=1);
 
-session_start();
+require_once __DIR__ . '/../../config/app.php';
 
-if(isset($_SESSION['user_id'])){
-    http_response_code(200);
-    echo json_encode(array(
-        "is_logged_in" => true,
-        "user" => array(
-            "id" => $_SESSION['user_id'],
-            "username" => $_SESSION['username']
-        )
-    ));
-} else {
-    http_response_code(200);
-    echo json_encode(array(
-        "is_logged_in" => false,
-        "user" => null
-    ));
-}
-?>
+learning_hub_require_method('GET');
+$user = learning_hub_current_user();
+learning_hub_json(['is_logged_in' => $user !== null, 'user' => $user]);

@@ -1,54 +1,45 @@
 <?php
-header("Content-Type: application/json; charset=UTF-8");
-header("Access-Control-Allow-Methods: POST");
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+declare(strict_types=1);
 
-include_once '../../config/database.php';
+require_once __DIR__ . '/../../config/app.php';
 
-$database = new Database();
-$db = $database->getConnection();
+learning_hub_require_method('POST');
+$body = learning_hub_request_body();
+$username = trim((string) ($body['username'] ?? ''));
+$email = strtolower(trim((string) ($body['email'] ?? '')));
+$password = (string) ($body['password'] ?? '');
 
-$data = json_decode(file_get_contents("php://input"));
-
-if(
-    !empty($data->username) &&
-    !empty($data->email) &&
-    !empty($data->password)
-){
-    // Check if email or username already exists
-    $query = "SELECT id FROM users WHERE email = :email OR username = :username LIMIT 1";
-    $stmt = $db->prepare($query);
-    $stmt->bindParam(':email', $data->email);
-    $stmt->bindParam(':username', $data->username);
-    $stmt->execute();
-    
-    if($stmt->rowCount() > 0){
-        http_response_code(400);
-        echo json_encode(array("message" => "Username or Email already exists."));
-        exit();
-    }
-
-    $query = "INSERT INTO users SET username=:username, email=:email, password=:password";
-    $stmt = $db->prepare($query);
-
-    $data->username = htmlspecialchars(strip_tags($data->username));
-    $data->email = htmlspecialchars(strip_tags($data->email));
-    $password_hash = password_hash($data->password, PASSWORD_BCRYPT);
-
-    $stmt->bindParam(":username", $data->username);
-    $stmt->bindParam(":email", $data->email);
-    $stmt->bindParam(":password", $password_hash);
-
-    if($stmt->execute()){
-        http_response_code(201);
-        echo json_encode(array("message" => "User was registered."));
-    } else {
-        http_response_code(503);
-        echo json_encode(array("message" => "Unable to register user."));
-    }
-} else {
-    http_response_code(400);
-    echo json_encode(array("message" => "Unable to register user. Data is incomplete."));
+if (!preg_match('/^[A-Za-z0-9 _-]{3,30}$/', $username)) {
+    learning_hub_json(['message' => 'Username must be 3-30 characters and use letters, numbers, spaces, underscores, or hyphens.'], 422);
 }
-?>
+if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    learning_hub_json(['message' => 'Enter a valid email address.'], 422);
+}
+if (strlen($password) < 8) {
+    learning_hub_json(['message' => 'Password must be at least 8 characters.'], 422);
+}
+
+$createdUser = learning_hub_update_data(static function (array &$data) use ($username, $email, $password): ?array {
+    foreach ($data['users'] as $user) {
+        if (strtolower((string) $user['email']) === $email || strtolower((string) $user['username']) === strtolower($username)) {
+            return null;
+        }
+    }
+
+    $user = [
+        'id' => learning_hub_next_id($data['users']),
+        'username' => $username,
+        'email' => $email,
+        'password_hash' => password_hash($password, PASSWORD_DEFAULT),
+        'created_at' => gmdate('c'),
+    ];
+    $data['users'][] = $user;
+    unset($user['password_hash']);
+    return $user;
+});
+
+if ($createdUser === null) {
+    learning_hub_json(['message' => 'That username or email is already registered.'], 409);
+}
+
+learning_hub_json(['message' => 'Account created. You can now log in.', 'user' => $createdUser], 201);

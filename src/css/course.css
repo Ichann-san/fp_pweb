@@ -100,40 +100,40 @@
 }
 
 /* Dark mode prose */
-.dark .prose {
+[data-bs-theme="dark"] .prose {
     color: #d1d5db;
 }
 
-.dark .prose h1 {
+[data-bs-theme="dark"] .prose h1 {
     color: #f9fafb;
 }
 
-.dark .prose h2 {
+[data-bs-theme="dark"] .prose h2 {
     color: #e5e7eb;
 }
 
-.dark .prose h3 {
+[data-bs-theme="dark"] .prose h3 {
     color: #d1d5db;
 }
 
-.dark .prose code {
+[data-bs-theme="dark"] .prose code {
     background-color: #374151;
     color: #e5e7eb;
 }
 
-.dark .prose pre {
+[data-bs-theme="dark"] .prose pre {
     background-color: #111827;
 }
 
-.dark .prose blockquote {
+[data-bs-theme="dark"] .prose blockquote {
     color: #9ca3af;
 }
 
-.dark .prose th, .dark .prose td {
+[data-bs-theme="dark"] .prose th, [data-bs-theme="dark"] .prose td {
     border-color: #4b5563;
 }
 
-.dark .prose th {
+[data-bs-theme="dark"] .prose th {
     background-color: #374151;
 }
 
@@ -170,11 +170,11 @@
 }
 
 /* Dark mode connecting line */
-.dark .chapter-item::before {
+[data-bs-theme="dark"] .chapter-item::before {
     background-color: #4b5563;
 }
 
-.dark .chapter-item.completed::before {
+[data-bs-theme="dark"] .chapter-item.completed::before {
     background-color: #6366f1;
 }
 
@@ -223,12 +223,12 @@
 }
 
 /* Dark mode checkbox */
-.dark .chapter-checkbox {
+[data-bs-theme="dark"] .chapter-checkbox {
     background-color: #374151;
     border-color: #6b7280;
 }
 
-.dark .chapter-checkbox:checked {
+[data-bs-theme="dark"] .chapter-checkbox:checked {
     background-color: #6366f1;
     border-color: #6366f1;
 }
@@ -255,19 +255,19 @@
     color: #6b7280;
 }
 
-.dark .chapter-title {
+[data-bs-theme="dark"] .chapter-title {
     color: #d1d5db;
 }
 
-.dark .chapter-title:hover {
+[data-bs-theme="dark"] .chapter-title:hover {
     color: #818cf8;
 }
 
-.dark .chapter-title.active {
+[data-bs-theme="dark"] .chapter-title.active {
     color: #818cf8;
 }
 
-.dark .chapter-title.completed {
+[data-bs-theme="dark"] .chapter-title.completed {
     color: #9ca3af;
 }
 

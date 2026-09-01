@@ -1,54 +1,55 @@
 <?php
-header("Content-Type: application/json; charset=UTF-8");
-header("Access-Control-Allow-Methods: POST");
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+declare(strict_types=1);
 
-session_start();
+require_once __DIR__ . '/../../config/app.php';
 
-include_once '../../config/database.php';
+learning_hub_require_method('POST');
+$body = learning_hub_request_body();
+$email = strtolower(trim((string) ($body['email'] ?? '')));
+$password = (string) ($body['password'] ?? '');
 
-$database = new Database();
-$db = $database->getConnection();
-
-$data = json_decode(file_get_contents("php://input"));
-
-if(!empty($data->email) && !empty($data->password)) {
-    $query = "SELECT id, username, password, email FROM users WHERE email = :email LIMIT 1";
-    $stmt = $db->prepare($query);
-    $stmt->bindParam(':email', $data->email);
-    $stmt->execute();
-    
-    if($stmt->rowCount() > 0){
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        $id = $row['id'];
-        $username = $row['username'];
-        $password_hash = $row['password'];
-        $email = $row['email'];
-
-        if(password_verify($data->password, $password_hash)){
-            $_SESSION['user_id'] = $id;
-            $_SESSION['username'] = $username;
-            
-            http_response_code(200);
-            echo json_encode(array(
-                "message" => "Login successful.",
-                "user" => array(
-                    "id" => $id,
-                    "username" => $username,
-                    "email" => $email
-                )
-            ));
-        } else {
-            http_response_code(401);
-            echo json_encode(array("message" => "Invalid email or password."));
-        }
-    } else {
-        http_response_code(401);
-        echo json_encode(array("message" => "Invalid email or password."));
-    }
-} else {
-    http_response_code(400);
-    echo json_encode(array("message" => "Unable to login. Data is incomplete."));
+if (!filter_var($email, FILTER_VALIDATE_EMAIL) || $password === '') {
+    learning_hub_json(['message' => 'Enter your email and password.'], 422);
 }
-?>
+
+$authenticatedUser = learning_hub_update_data(static function (array &$data) use ($email, $password): ?array {
+    $matchedUser = null;
+    foreach ($data['users'] as $user) {
+        if (strtolower((string) $user['email']) === $email) {
+            $matchedUser = $user;
+            break;
+        }
+    }
+
+    $success = $matchedUser !== null && password_verify($password, (string) $matchedUser['password_hash']);
+    $event = [
+        'id' => learning_hub_next_id($data['login_events']),
+        'user_id' => $success ? (int) $matchedUser['id'] : null,
+        'email' => $email,
+        'outcome' => $success ? 'success' : 'failure',
+        'ip' => substr((string) ($_SERVER['REMOTE_ADDR'] ?? ''), 0, 45),
+        'user_agent' => substr((string) ($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 180),
+        'created_at' => gmdate('c'),
+    ];
+    $data['login_events'][] = $event;
+    $data['login_events'] = array_slice($data['login_events'], -500);
+
+    if (!$success) {
+        return null;
+    }
+
+    unset($matchedUser['password_hash']);
+    return $matchedUser;
+});
+
+if ($authenticatedUser === null) {
+    learning_hub_json(['message' => 'Invalid email or password.'], 401);
+}
+
+learning_hub_start_session();
+session_regenerate_id(true);
+$_SESSION['user_id'] = $authenticatedUser['id'];
+$_SESSION['username'] = $authenticatedUser['username'];
+$_SESSION['email'] = $authenticatedUser['email'];
+
+learning_hub_json(['message' => 'Login successful.', 'user' => $authenticatedUser]);

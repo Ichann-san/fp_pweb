@@ -1,586 +1,78 @@
-﻿# Learning Hub - Final Project PWEB
+# Learning Hub
 
-**Platform Pembelajaran Online Interaktif**
+Learning Hub is a small learning management system built with raw HTML, CSS, and JavaScript plus a PHP JSON API. Users can create an account, sign in, enroll in courses, read Markdown lessons, and save chapter progress.
 
----
+## Stack
 
-## 📋 Daftar Isi
-1. [Deskripsi Proyek](#deskripsi-proyek)
-2. [Laporan Proyek](#laporan-proyek)
-   - [Frontend Development](#1-frontend-development)
-   - [Backend Development](#2-backend-development)
-   - [Database Implementation](#3-database-implementation)
-   - [Integrasi API](#4-integrasi-api)
-   - [Pengujian (Testing)](#5-pengujian-testing)
-3. [Diagram Sistem](#diagram-sistem)
-4. [User Guide](#user-guide)
+- Frontend: native HTML5 and browser JavaScript with the restored Bootstrap 5 visual layer and project CSS
+- Backend: PHP 8+
+- Storage: one server-side JSON file guarded by file locking
+- Sessions: PHP sessions with `HttpOnly` and `SameSite=Lax` cookies
+- Content: local Markdown files rendered by a small in-project renderer
 
----
+No JavaScript framework, package manager, or SQL server is required. The restored legacy UI loads Bootstrap and Inter from CDNs.
 
-## Deskripsi Proyek
+## Run locally
 
-**Learning Hub** adalah platform pembelajaran online yang menyediakan berbagai kursus programming dan teknologi. Platform ini memungkinkan pengguna untuk:
-- Melihat katalog kursus yang tersedia
-- Login dan registrasi akun
-- Mengakses materi pembelajaran per-chapter
-- Melacak progress belajar dengan fitur progress tracking
+From the project root:
 
-### Teknologi yang Digunakan
-
-| Layer | Teknologi |
-|-------|-----------|
-| Frontend | HTML5, CSS3, JavaScript (ES6+), Bootstrap 5.3.3 |
-| Backend | PHP (Planned) |
-| Database | LocalStorage (Current), MySQL (Planned) |
-| Fonts | Google Fonts (Inter) |
-| Markdown Parser | marked.js |
-
----
-
-## Laporan Proyek
-
-### 1. Frontend Development
-
-#### 1.1 Struktur File Frontend
-
-```
-src/
-├── html/
-│   ├── index.html          # Halaman utama
-│   ├── login.html          # Halaman login/register
-│   └── course/
-│       ├── cp.html         # Competitive Programming
-│       ├── html.html       # HTML Course
-│       ├── css.html        # CSS Course
-│       ├── javascript.html # JavaScript Course
-│       ├── quantum.html    # Quantum Computing
-│       ├── uiux.html       # UI/UX Design
-│       └── datascience.html# Data Science
-├── css/
-│   ├── main.css           # Stylesheet utama (Bootstrap + Custom)
-│   ├── course.css         # Stylesheet untuk halaman course
-│   └── style.css          # Legacy stylesheet
-├── js/
-│   ├── script.js          # Logic halaman utama
-│   ├── auth.js            # Modul autentikasi
-│   └── course.js          # Modul course & progress tracking
-└── content/
-    ├── html/              # Konten materi HTML (Markdown)
-    ├── css/               # Konten materi CSS
-    ├── javascript/        # Konten materi JavaScript
-    ├── cp/                # Konten materi CP
-    ├── quantum/           # Konten materi Quantum
-    ├── uiux/              # Konten materi UI/UX
-    └── datascience/       # Konten materi Data Science
+```bash
+php -S localhost:8000
 ```
 
-#### 1.2 Komponen UI yang Diimplementasi
+Open `http://localhost:8000/src/html/index.html`.
 
-| Komponen | File | Deskripsi |
-|----------|------|-----------|
-| **Navigation** | `script.js` | Navbar responsif dengan hamburger menu untuk mobile |
-| **Theme Toggle** | `script.js` | Dark/Light mode menggunakan Bootstrap `data-bs-theme` |
-| **Course Carousel** | `script.js` | Horizontal scroll cards untuk menampilkan kursus |
-| **Auth Tabs** | `auth.js` | Tab-based form untuk login dan register |
-| **Progress Bar** | `course.js` | Visual progress tracking per course |
-| **Chapter Sidebar** | `course.js` | Daftar chapter dengan checkbox completion |
+Runtime data is created at `data/learning-hub.json` and is ignored by Git. To store it elsewhere, set `LEARNING_HUB_DATA_FILE` to an absolute writable path before starting PHP.
 
-#### 1.3 Styling dengan Bootstrap + Custom CSS
+## Main structure
 
-```css
-/* Custom CSS Variables - main.css */
-:root {
-    --bs-primary: #4f46e5;        /* Indigo theme */
-    --bs-primary-hover: #4338ca;
-    --text-primary: #111827;
-    --text-secondary: #6b7280;
-    --card-bg: #ffffff;
-    --transition-fast: 0.15s ease;
-}
-
-/* Dark Mode Support */
-[data-bs-theme="dark"] {
-    --text-primary: #f9fafb;
-    --text-secondary: #9ca3af;
-    --card-bg: #1f2937;
-}
+```text
+api/                 PHP endpoints for auth, courses, enrollment, progress
+assets/              Local brand artwork
+config/app.php       Catalog, sessions, JSON storage, and API helpers
+src/css/             Raw CSS design system and course styles
+src/html/            Home, authentication, and course pages
+src/js/              Navigation, authentication, and course behavior
+src/content/         Course lessons in Markdown
+tests/api-smoke.mjs  End-to-end API smoke test
+graphify-out/         Interactive architecture graph and report
 ```
 
-#### 1.4 JavaScript Modules Pattern
+## API
 
-Menggunakan **IIFE (Immediately Invoked Function Expression)** untuk enkapsulasi:
+| Feature | Method and path |
+|---|---|
+| Register | `POST /api/auth/register.php` |
+| Login | `POST /api/auth/login.php` |
+| Session | `GET /api/auth/check_session.php` |
+| Logout | `POST /api/auth/logout.php` |
+| Courses | `GET /api/courses/read.php` |
+| Course detail | `GET /api/courses/detail.php?id=html` |
+| Enroll | `POST /api/enroll/create.php` |
+| My courses | `GET /api/enroll/my_courses.php` |
+| Read progress | `GET /api/progress/read.php?course_id=html` |
+| Update progress | `POST /api/progress/update.php` |
 
-```javascript
-// AuthModule - auth.js
-const AuthModule = (function() {
-    // Private state
-    let authData = { users: [], currentUser: null };
-    
-    // Private functions
-    function validateEmail(email) { ... }
-    function validatePassword(password) { ... }
-    
-    // Public API
-    return {
-        register,
-        login,
-        logout,
-        getCurrentUser,
-        isLoggedIn
-    };
-})();
+JSON responses use a `success` boolean and either `data` or `message`.
+
+## Verify
+
+With the local PHP server running at port 8000:
+
+```bash
+node tests/api-smoke.mjs http://127.0.0.1:8000
 ```
 
-```javascript
-// CourseModule - course.js
-const CourseModule = (function() {
-    // State
-    let courseId = '';
-    let chapters = [];
-    let progress = {};
-    
-    // Public API
-    return {
-        init,
-        loadChapter,
-        toggleComplete,
-        navigatePrevious,
-        navigateNext
-    };
-})();
-```
+The test covers registration, failed and successful login recording, session state, enrollment, and progress updates. It uses a unique account each run.
 
----
+## Deployment note
 
-### 2. Backend Development
+The included Vercel configuration runs PHP through the community PHP runtime. On Vercel, JSON data and PHP sessions are stored in the function's temporary directory. They can disappear after a cold start, redeployment, or instance change and are not shared reliably between instances. This is suitable only for a demonstration with non-sensitive data. See [DEPLOYMENT.md](DEPLOYMENT.md).
 
-#### Status: 🔄 Planned (Menggunakan PHP)
+## Team
 
-```
-src/
-└── php/           # Folder untuk file PHP (akan diimplementasi)
-    ├── config/
-    │   └── database.php    # Koneksi database
-    ├── api/
-    │   ├── auth.php        # Endpoint autentikasi
-    │   ├── courses.php     # Endpoint courses
-    │   └── progress.php    # Endpoint progress tracking
-    └── includes/
-        └── functions.php   # Helper functions
-```
-
-#### Rencana Implementasi Backend
-
-| Endpoint | Method | Deskripsi |
-|----------|--------|-----------|
-| `/api/auth.php?action=register` | POST | Registrasi user baru |
-| `/api/auth.php?action=login` | POST | Login user |
-| `/api/auth.php?action=logout` | POST | Logout user |
-| `/api/courses.php` | GET | Daftar semua courses |
-| `/api/progress.php` | GET/POST | Get/Update progress user |
-
----
-
-### 3. Database Implementation
-
-#### Status Saat Ini: LocalStorage (Client-side)
-
-```javascript
-// Struktur data di LocalStorage
-localStorage.setItem('learning_hub_users', JSON.stringify([
-    {
-        id: 1702412345678,
-        email: "user@example.com",
-        password: "hashedpassword",
-        createdAt: "2025-12-14T10:00:00.000Z"
-    }
-]));
-
-localStorage.setItem('learning_hub_current_user', JSON.stringify({
-    id: 1702412345678,
-    email: "user@example.com"
-}));
-
-localStorage.setItem('learning_hub_progress_javascript', JSON.stringify({
-    "intro": true,
-    "variables": true,
-    "functions": false
-}));
-```
-
-#### Rencana Database: MySQL
-
-```sql
--- Tabel Users
-CREATE TABLE users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Tabel Courses
-CREATE TABLE courses (
-    id VARCHAR(50) PRIMARY KEY,
-    title VARCHAR(255) NOT NULL,
-    description TEXT,
-    image_url VARCHAR(500)
-);
-
--- Tabel Progress
-CREATE TABLE progress (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    course_id VARCHAR(50) NOT NULL,
-    chapter_id VARCHAR(50) NOT NULL,
-    completed BOOLEAN DEFAULT FALSE,
-    completed_at TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (course_id) REFERENCES courses(id)
-);
-```
-
----
-
-### 4. Integrasi API
-
-#### Status Saat Ini: Local Content Loading
-
-```javascript
-// Fetch materi course dari file Markdown
-async function loadChapter(chapterId) {
-    const response = await fetch(`../../content/${courseId}/${chapter.contentFile}`);
-    const markdown = await response.text();
-    contentArea.innerHTML = marked.parse(markdown);
-}
-```
-
-#### Rencana Integrasi API Backend (PHP)
-
-```javascript
-// Contoh integrasi dengan backend PHP
-async function login(email, password) {
-    const response = await fetch('/api/auth.php?action=login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-    });
-    return await response.json();
-}
-
-async function saveProgress(courseId, chapterId, completed) {
-    const response = await fetch('/api/progress.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ courseId, chapterId, completed })
-    });
-    return await response.json();
-}
-```
-
----
-
-### 5. Pengujian (Testing)
-
-#### 5.1 Manual Testing Checklist
-
-| Fitur | Status | Catatan |
-|-------|--------|---------|
-| ✅ Homepage load | Passed | Semua komponen ter-render dengan benar |
-| ✅ Navigation links | Passed | Smooth scroll ke section yang tepat |
-| ✅ Theme toggle | Passed | Dark/Light mode berfungsi, persisten di localStorage |
-| ✅ Mobile responsive | Passed | Hamburger menu berfungsi di layar kecil |
-| ✅ Login form | Passed | Validasi email & password berjalan |
-| ✅ Register form | Passed | User tersimpan di localStorage |
-| ✅ Course page load | Passed | Chapter list ter-render |
-| ✅ Progress tracking | Passed | Checkbox & progress bar tersinkron |
-| ✅ Markdown rendering | Passed | marked.js mem-parse konten dengan benar |
-| ✅ Chapter navigation | Passed | Previous/Next button berfungsi |
-
-#### 5.2 Browser Compatibility
-
-| Browser | Status |
-|---------|--------|
-| Google Chrome | ✅ Tested |
-| Mozilla Firefox | ✅ Tested |
-| Microsoft Edge | ✅ Tested |
-| Safari | ⏳ Not Tested |
-
-#### 5.3 Responsive Testing
-
-| Device | Viewport | Status |
-|--------|----------|--------|
-| Desktop | 1920x1080 | ✅ Passed |
-| Laptop | 1366x768 | ✅ Passed |
-| Tablet | 768x1024 | ✅ Passed |
-| Mobile | 375x667 | ✅ Passed |
-
----
-
-## Diagram Sistem
-
-### Arsitektur Sistem (Current - Frontend Only)
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                         CLIENT BROWSER                          │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  ┌──────────────┐   ┌──────────────┐   ┌──────────────┐        │
-│  │  index.html  │   │  login.html  │   │ course/*.html│        │
-│  │  (Homepage)  │   │ (Auth Page)  │   │(Course Pages)│        │
-│  └──────┬───────┘   └──────┬───────┘   └──────┬───────┘        │
-│         │                  │                  │                 │
-│         ▼                  ▼                  ▼                 │
-│  ┌──────────────────────────────────────────────────────┐      │
-│  │                    JavaScript Layer                   │      │
-│  │  ┌────────────┐  ┌────────────┐  ┌────────────┐      │      │
-│  │  │ script.js  │  │  auth.js   │  │ course.js  │      │      │
-│  │  │ - NavLinks │  │ - Login    │  │ - Progress │      │      │
-│  │  │ - Theme    │  │ - Register │  │ - Chapters │      │      │
-│  │  │ - Carousel │  │ - Session  │  │ - Content  │      │      │
-│  │  └────────────┘  └────────────┘  └────────────┘      │      │
-│  └──────────────────────────────────────────────────────┘      │
-│                              │                                  │
-│                              ▼                                  │
-│  ┌──────────────────────────────────────────────────────┐      │
-│  │                    CSS Layer                          │      │
-│  │  ┌────────────┐  ┌────────────┐  ┌────────────┐      │      │
-│  │  │ Bootstrap  │  │  main.css  │  │ course.css │      │      │
-│  │  │   5.3.3    │  │  (Custom)  │  │  (Course)  │      │      │
-│  │  └────────────┘  └────────────┘  └────────────┘      │      │
-│  └──────────────────────────────────────────────────────┘      │
-│                              │                                  │
-│                              ▼                                  │
-│  ┌──────────────────────────────────────────────────────┐      │
-│  │                   LocalStorage                        │      │
-│  │  • learning_hub_users      (User accounts)            │      │
-│  │  • learning_hub_current_user (Active session)         │      │
-│  │  • learning_hub_progress_* (Course progress)          │      │
-│  │  • color-theme             (Theme preference)         │      │
-│  └──────────────────────────────────────────────────────┘      │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    STATIC CONTENT (Markdown)                     │
-│  src/content/{course_id}/{chapter}.md                           │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### Arsitektur Sistem (Planned - Full Stack dengan PHP)
-
-```
-┌──────────────────────────────────────────────────────────────────┐
-│                         CLIENT BROWSER                            │
-│  ┌────────────────────────────────────────────────────────────┐  │
-│  │  HTML Pages (index, login, courses)                         │  │
-│  │  JavaScript (script.js, auth.js, course.js)                 │  │
-│  │  CSS (Bootstrap + Custom)                                   │  │
-│  └───────────────────────────┬────────────────────────────────┘  │
-└──────────────────────────────┼───────────────────────────────────┘
-                               │ HTTP Requests (AJAX/Fetch)
-                               ▼
-┌──────────────────────────────────────────────────────────────────┐
-│                         WEB SERVER (PHP)                          │
-│  ┌────────────────────────────────────────────────────────────┐  │
-│  │                       API Endpoints                         │  │
-│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐         │  │
-│  │  │  auth.php   │  │ courses.php │  │ progress.php│         │  │
-│  │  │ POST /login │  │ GET /list   │  │ GET /status │         │  │
-│  │  │ POST /reg   │  │ GET /detail │  │ POST /update│         │  │
-│  │  └─────────────┘  └─────────────┘  └─────────────┘         │  │
-│  └───────────────────────────┬────────────────────────────────┘  │
-│                              │                                    │
-│  ┌───────────────────────────┴────────────────────────────────┐  │
-│  │                     PHP Core Logic                          │  │
-│  │  config/database.php    includes/functions.php              │  │
-│  └───────────────────────────┬────────────────────────────────┘  │
-└──────────────────────────────┼───────────────────────────────────┘
-                               │ SQL Queries
-                               ▼
-┌──────────────────────────────────────────────────────────────────┐
-│                         MySQL DATABASE                            │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐               │
-│  │    users    │  │   courses   │  │   progress  │               │
-│  │ • id        │  │ • id        │  │ • user_id   │               │
-│  │ • email     │  │ • title     │  │ • course_id │               │
-│  │ • password  │  │ • desc      │  │ • chapter_id│               │
-│  │ • created_at│  │ • image_url │  │ • completed │               │
-│  └─────────────┘  └─────────────┘  └─────────────┘               │
-└──────────────────────────────────────────────────────────────────┘
-```
-
-### Flowchart Autentikasi
-
-```
-        ┌─────────────────┐
-        │  User Membuka   │
-        │   Login Page    │
-        └────────┬────────┘
-                 │
-        ┌────────▼────────┐
-        │ Pilih Tab Login │
-        │  atau Register  │
-        └────────┬────────┘
-                 │
-        ┌────────┴────────┐
-        │                 │
-        ▼                 ▼
-   ┌─────────┐      ┌──────────┐
-   │  LOGIN  │      │ REGISTER │
-   └────┬────┘      └────┬─────┘
-        │                │
-        ▼                ▼
-   ┌─────────────┐  ┌─────────────┐
-   │ Input Email │  │ Input Email │
-   │ & Password  │  │ & Password  │
-   └──────┬──────┘  │ & Confirm   │
-          │         └──────┬──────┘
-          ▼                ▼
-   ┌─────────────┐  ┌─────────────┐
-   │  Validasi   │  │  Validasi   │
-   │   Format    │  │ Format &    │
-   └──────┬──────┘  │ Password    │
-          │         │   Match     │
-          ▼         └──────┬──────┘
-   ┌─────────────┐         ▼
-   │ Cek User di │  ┌─────────────┐
-   │ localStorage│  │ Cek Email   │
-   └──────┬──────┘  │   Exists?   │
-          │         └──────┬──────┘
-     ┌────┴────┐      ┌────┴────┐
-     │         │      │         │
-   Valid    Invalid  New     Exists
-     │         │      │         │
-     ▼         ▼      ▼         ▼
-┌────────┐ ┌──────┐ ┌─────┐ ┌──────┐
-│ Set    │ │ Show │ │Save │ │ Show │
-│Session │ │Error │ │User │ │Error │
-└───┬────┘ └──────┘ └──┬──┘ └──────┘
-    │                  │
-    ▼                  ▼
-┌────────┐       ┌──────────┐
-│Redirect│       │Switch to │
-│to Home │       │Login Tab │
-└────────┘       └──────────┘
-```
-
----
-
-## User Guide
-
-### 1. Mengakses Website
-
-1. Buka browser (Chrome, Firefox, atau Edge)
-2. Navigasi ke file `src/html/index.html` atau jalankan dengan live server
-3. Homepage akan menampilkan katalog kursus yang tersedia
-
-### 2. Registrasi Akun Baru
-
-1. Klik tombol **"Login"** di navbar
-2. Pada halaman login, klik tab **"Register"**
-3. Masukkan:
-   - Email (format valid: user@example.com)
-   - Password (minimal 6 karakter)
-   - Confirm Password (harus sama dengan password)
-4. Klik **"Create Account"**
-5. Jika berhasil, akan muncul pesan sukses dan otomatis pindah ke tab Login
-
-### 3. Login ke Akun
-
-1. Pada halaman login, pastikan tab **"Login"** aktif
-2. Masukkan email dan password yang sudah terdaftar
-3. Klik **"Sign In"**
-4. Jika berhasil, akan redirect ke homepage
-
-### 4. Memilih Kursus
-
-1. Di homepage, scroll ke bagian **"Featured Courses"**
-2. Geser carousel ke kiri/kanan untuk melihat semua kursus
-3. Klik **"View Course"** pada kursus yang diinginkan
-
-### 5. Belajar di Halaman Course
-
-1. **Panel Kiri**: Area konten materi (Markdown)
-2. **Panel Kanan**: Daftar chapter dengan checkbox progress
-
-#### Navigasi Chapter:
-- Klik judul chapter di sidebar untuk membuka materi
-- Gunakan tombol **"Previous"** dan **"Next"** di bawah konten
-- Scroll ke atas otomatis saat berpindah chapter
-
-#### Menandai Progress:
-- ✅ Klik checkbox di samping judul chapter, ATAU
-- ✅ Klik tombol **"Mark as Complete"** di bawah konten
-- Progress bar di sidebar akan ter-update otomatis
-- Progress tersimpan di browser (localStorage)
-
-### 6. Menggunakan Dark Mode
-
-1. Klik ikon 🌙/☀️ di navbar
-2. Theme akan berubah dan tersimpan untuk kunjungan berikutnya
-
-### 7. Navigasi Mobile
-
-1. Di layar kecil (<768px), navbar berubah menjadi hamburger menu
-2. Klik ikon ☰ untuk membuka menu
-3. Klik ✕ atau area overlay untuk menutup menu
-
----
-
-## 📁 Struktur Proyek Lengkap
-
-```
-fp_pweb/
-├── README.md                    # Dokumentasi proyek (file ini)
-├── assets/
-│   └── icon.svg                 # Logo Learning Hub
-└── src/
-    ├── html/
-    │   ├── index.html           # Homepage
-    │   ├── login.html           # Halaman autentikasi
-    │   └── course/
-    │       ├── cp.html          # Competitive Programming
-    │       ├── css.html         # CSS Course
-    │       ├── datascience.html # Data Science
-    │       ├── html.html        # HTML Course
-    │       ├── javascript.html  # JavaScript Course
-    │       ├── quantum.html     # Quantum Computing
-    │       └── uiux.html        # UI/UX Design
-    ├── css/
-    │   ├── main.css             # Stylesheet utama
-    │   ├── course.css           # Stylesheet course pages
-    │   └── style.css            # Legacy stylesheet
-    ├── js/
-    │   ├── script.js            # Logic homepage
-    │   ├── auth.js              # Modul autentikasi
-    │   └── course.js            # Modul course & progress
-    ├── content/                 # Konten materi (Markdown)
-    │   ├── cp/
-    │   ├── css/
-    │   ├── datascience/
-    │   ├── html/
-    │   ├── javascript/
-    │   ├── quantum/
-    │   └── uiux/
-    └── php/                     # Backend PHP (planned)
-```
-
----
-
-## 👥 Tim Pengembang
-
-| Nama                   | NRP        | Kontribusi           |
-|------------------------|------------|----------------------|
-| Maulana Ikhsan         | 5025241163 | Frontend Development |
-| Adriel Mahira Dharma   | 5025241097 | Backend Development  |
-| Ja'far Balyan Al Karim | 5025241040 | Materi input subject |
-
----
-
-## 📝 Lisensi
-
-© 2025 Learning Hub. All Rights Reserved.
-
+| Name | NRP | Contribution |
+|---|---|---|
+| Maulana Ikhsan | 5025241163 | Frontend development |
+| Adriel Mahira Dharma | 5025241097 | Backend development |
+| Ja'far Balyan Al Karim | 5025241040 | Learning content |
